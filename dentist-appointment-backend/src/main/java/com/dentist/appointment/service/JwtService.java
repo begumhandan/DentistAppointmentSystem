@@ -1,4 +1,4 @@
-package com.dentist.appointment.security;
+package com.dentist.appointment.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

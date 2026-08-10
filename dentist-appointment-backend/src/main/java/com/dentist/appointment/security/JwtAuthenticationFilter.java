@@ -1,5 +1,6 @@
 package com.dentist.appointment.security;
 
+import com.dentist.appointment.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

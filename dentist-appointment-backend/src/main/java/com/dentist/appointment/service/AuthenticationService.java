@@ -5,7 +5,6 @@ import com.dentist.appointment.dto.AuthenticationResponse;
 import com.dentist.appointment.dto.RegisterRequest;
 import com.dentist.appointment.model.User;
 import com.dentist.appointment.repository.UserRepository;
-import com.dentist.appointment.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
