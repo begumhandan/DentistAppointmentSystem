@@ -1,0 +1,36 @@
+Diş Hekimi Randevu Sistemi
+        Proje Gereksinimleri ve Fikir Dokümanı
+        Kullanıcı Rolleri
+        • Hasta (Patient): Kayıt olur, randevu alır/iptal eder, geçmiş randevularını görür
+        • Diş Hekimi (Dentist): Kendi randevularını görür, müsaitlik saatlerini belirler, hasta notları ekler
+        • Sekreter: Tüm randevuları yönetir, hekim ve hasta kayıtlarını düzenler
+
+        Temel Özellikler (MVP — önce bunlara odaklan)
+        • Kullanıcı kaydı ve girişi (hasta olarak)
+        • Diş hekimi listesi görüntüleme (uzmanlık alanına göre filtreleme opsiyonel)
+        • Hekimin müsait saatlerini görme
+        • Randevu oluşturma (tarih + saat + hekim seçimi)
+        • Randevu iptal etme / güncelleme
+        • Hastanın kendi randevu geçmişini görmesi
+        • Basit admin paneli: tüm randevuları listeleme
+
+        İleri Seviye Özellikler (MVP sonrası eklenebilir)
+        • E-posta/SMS ile randevu hatırlatma
+        • Online ödeme entegrasyonu
+        • Tedavi geçmişi ve hasta dosyası (röntgen görseli yükleme gibi)
+        • Hekim değerlendirme/yorum sistemi
+        • Takvim görünümü (React'te bir kütüphane ile, örn. FullCalendar)
+        • Bekleme listesi (dolu saat için)
+        • Çoklu klinik/şube desteği
+        • Reçete/rapor oluşturma (PDF export)
+
+        MongoDB Koleksiyon Fikirleri
+        • users — hasta ve hekimleri tek koleksiyonda role alanıyla ayırabilirsin, ya da ayrı patients/dentists koleksiyonları kullanabilirsin
+        • appointments — patientId, dentistId, date, time, status: pending/confirmed/cancelled/completed
+        • availability — hekimin haftalık çalışma saatleri (opsiyonel, appointments içine de gömülebilir)
+        • treatments — tedavi geçmişi için (opsiyonel)
+
+        Teknik Gereksinimler
+        • Backend: Spring Boot REST API, Spring Security + JWT (giriş/kimlik doğrulama için)
+        • Frontend: React + Axios (API çağrıları) + React Router (sayfa yönlendirme)
+        • Validasyon: Randevu çakışması kontrolü (aynı hekim, aynı saat, iki randevu olamaz) — bu projenin en öğretici kısmı olacak
