@@ -16,8 +16,27 @@ export default function Dashboard({ user }) {
                 setDoctors(doctorList);
             };
             fetchDoctors();
+        } else if (activeTab === 'my-appointments') {
+            const fetchAppointments = async () => {
+                try {
+                    const allAppointments = await getAppointments();
+
+                    console.log("Backend'den Gelen Tüm Randevular:", allAppointments);
+                    console.log("Şu an giriş yapan hastanın ID'si:", user.id);
+
+                    //randevuları giriş yapan hastaya göre filtrele
+                    const myApps = allAppointments.filter(app => app.patient && app.patient.id === user.id);
+
+                    console.log("Ekrana basılacak olan (Filtrelenmiş) Randevular:", myApps);
+
+                    setAppointments(myApps);
+                } catch (error) {
+                    console.error("Randevular çekilemedi:", error);
+                }
+            };
+            fetchAppointments();
         }
-    }, [activeTab]);
+    }, [activeTab, user.id]);
 
     return (
         <div className="dc-dashboard">
@@ -231,6 +250,50 @@ export default function Dashboard({ user }) {
                             </div>
                         </>
                     )}
+                    {/*kullanıcı kendi randevularını görecek*/}
+                    {activeTab === 'my-appointments' && (
+                        <div>
+                            <button
+                                onClick={() => setActiveTab('menu')}
+                                style={{ marginBottom: '15px', padding: '8px 15px', cursor: 'pointer', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px' }}
+                            >
+                                ← Geri Dön
+                            </button>
+                            <h3 style={{ color: '#2980b9' }}>Geçmiş Randevularım</h3>
+
+                            {appointments.length === 0 ? (
+                                <div style={{ padding: '20px', background: '#f8f9fa', borderRadius: '5px', color: '#7f8c8d' }}>
+                                    Henüz alınmış bir randevunuz bulunmamaktadır.
+                                </div>
+                            ) : (
+                                <ul style={{ listStyleType: 'none', padding: 0 }}>
+                                    {appointments.map(app => (
+                                        <li key={app.id} style={{ padding: '15px', border: '1px solid #e0e0e0', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#fdfdfd', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                                            <div style={{ fontSize: '16px', marginBottom: '8px' }}>
+                                                <strong>👨‍⚕️ Doktor:</strong> Dr. {app.doctor?.name} {app.doctor?.surname}
+                                            </div>
+                                            <div style={{ fontSize: '15px', marginBottom: '8px', color: '#555' }}>
+                                                <strong>📅 Tarih:</strong> {new Date(app.appointmentDate).toLocaleString('tr-TR')}
+                                            </div>
+                                            <div style={{ fontSize: '14px' }}>
+                                                <strong>📌 Durum:</strong>
+                                                <span style={{
+                                                    marginLeft: '10px',
+                                                    padding: '4px 8px',
+                                                    borderRadius: '12px',
+                                                    backgroundColor: app.status === 'PENDING' ? '#f39c12' : '#27ae60',
+                                                    color: 'white'
+                                                }}>
+                                {app.status === 'PENDING' ? '⏳ Onay Bekliyor' : '✅ Onaylandı'}
+                            </span>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    )}
+
 
                     {/* randevu eklme butonu */}
                     {activeTab === 'new-appointment' && (
