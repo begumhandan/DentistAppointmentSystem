@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // kendisini al ("Bearer " kelimesi 7 karakter olduğu için 7. indexten sonrasını kesiyorum)
         jwt = authHeader.substring(7);
 
-        //token okuyup içindeki kullanıcı adını çıkarıyoruz
+        //token okuyup içindeki email çıkarıyoruz
         username = jwtService.extractUsername(jwt);
 
         //token bir isim yazıyorsa ve bu kişi sisteme henüz giriş yapmamışsa =context boş ise

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { User, Calendar, FileText, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 
@@ -28,7 +28,7 @@ export default function AppointmentForm({ onAppointmentAdded }) {
           date: new Date(formData.date+':00').toISOString() // Ensure standard ISO format for Spring Boot LocalDateTime
         };
 
-        await axios.post('http://localhost:8080/api/appointments', payload);
+        await axios.post('${import.meta.env.VITE_API_URL}/appointments', payload);
       setSuccess(true);
       setFormData({
         patientName: '',
@@ -50,7 +50,6 @@ export default function AppointmentForm({ onAppointmentAdded }) {
 
   return (
     <div className="glass-panel rounded-2xl p-6 relative overflow-hidden">
-      {/* Decorative bg elements */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-full blur-3xl opacity-50 -mr-10 -mt-10 pointer-events-none"></div>
       
       <div className="relative z-10">

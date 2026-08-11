@@ -9,6 +9,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
+import org.springframework.security.config.Customizer;
 
 @Configuration
 @EnableWebSecurity
@@ -21,7 +26,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // CSRF korumasını decre dışı
+
+                .cors(Customizer.withDefaults())
+                //csrf devre dışı
                 .csrf(csrf -> csrf.disable())
 
                 // hangi adreslere kimlerin erişebileceğini kurallara bağladı
@@ -43,5 +50,23 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+            CorsConfiguration configuration = new CorsConfiguration();
+            // React'in çalıştığı adrese izin veriyoruz
+            configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+            // İzin verilen HTTP metodları (OPTIONS da koyduk)
+            configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+            // İzin verilen başlıklar (Token'ı Authorization başlığında gönderdik)
+            configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+            // Kimlik bilgilerine (cookie vb.) izin ver
+            configuration.setAllowCredentials(true);
+
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            source.registerCorsConfiguration("/**", configuration);
+
+            return source;
+
     }
 }

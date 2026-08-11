@@ -16,7 +16,7 @@ public class AuthController {
 
     private final AuthenticationService service;
 
-    // kayıt olma POST http://localhost:8080/api/auth/register
+    // kayıt olma POST http://localhost:8081/api/auth/register
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(
             @RequestBody RegisterRequest request
@@ -24,7 +24,7 @@ public class AuthController {
         return ResponseEntity.ok(service.register(request));
     }
 
-    // giriş yapma: POST http://localhost:8080/api/auth/authenticate
+    // giriş yapma: POST http://localhost:8081/api/auth/authenticate
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> authenticate(
             @RequestBody AuthenticationRequest request

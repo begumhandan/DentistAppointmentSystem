@@ -23,7 +23,7 @@ public class JwtService {
     @Value("${application.security.jwt.secret-key}")
     private String SECRET_KEY;
 
-    //token içinden username çıkaran metod
+    //token içinden email çıkaran metod
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }

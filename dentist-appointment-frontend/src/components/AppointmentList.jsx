@@ -41,7 +41,7 @@ const AppointmentList = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/appointments')
+    axios.get('${import.meta.env.VITE_API_URL}/appointments')
         .then((response) => {
           setAppointments(response.data);
           setLoading(false);
@@ -56,7 +56,7 @@ const AppointmentList = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Bu randevuyu silmek istediğinize emin misiniz?")) return;
     try {
-      await axios.delete(`http://localhost:8080/api/appointments/${id}`);
+      await axios.delete(`${import.meta.env.VITE_API_URL}/${id}`);
       setAppointments((prevApts) => prevApts.filter(apt => apt.id !== id));
     } catch (error) {
       console.error("Hata:", error);

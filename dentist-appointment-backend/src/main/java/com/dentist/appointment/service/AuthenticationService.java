@@ -1,5 +1,4 @@
 package com.dentist.appointment.service;
-
 import com.dentist.appointment.dto.AuthenticationRequest;
 import com.dentist.appointment.dto.AuthenticationResponse;
 import com.dentist.appointment.dto.RegisterRequest;
