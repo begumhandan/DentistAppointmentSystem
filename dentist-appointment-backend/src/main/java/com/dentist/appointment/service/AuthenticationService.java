@@ -38,12 +38,13 @@ public class AuthenticationService {
                 .token(jwtToken)
                 .role(user.getRole())
                 .name(user.getName())
+                .id(user.getId())
                 .build();
     }
 
     //giriş yap
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        //kullanıcı  adı ve şifre kontrolü
+        // kullanıcı adı ve şifre kontrolü
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
@@ -51,17 +52,18 @@ public class AuthenticationService {
                 )
         );
 
-        //kullanıcıyı bulma
+        // kullanıcıyı bulma
         var user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
-        //yeni token üret
+        // yeni token üret
         var jwtToken = jwtService.generateToken(user);
 
         return AuthenticationResponse.builder()
                 .token(jwtToken)
                 .role(user.getRole())
                 .name(user.getName())
+                .id(user.getId())
                 .build();
     }
 }

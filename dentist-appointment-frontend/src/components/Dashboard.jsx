@@ -1,13 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import { getAppointments, createAppointment, updateAppointment } from '../services/appointmentService';
 import { getDoctors } from '../services/userService';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'moment/locale/tr';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+moment.locale('tr');
+const localizer = momentLocalizer(moment);
 
 export default function Dashboard({ user }) {
-    // 'menu' = Ana butonlar, randevu alma butonu
     const [activeTab, setActiveTab] = useState('menu');
     const [doctors, setDoctors] = useState([]);
 
     const [selectedDoctor, setSelectedDoctor] = useState('');
     const [selectedDate, setSelectedDate] = useState('');
+
+    //renduvalrı tuttuğum state
+    const [appointments, setAppointments] = useState([]);
+    const [editingAppId, setEditingAppId] = useState(null);
+    const [editDuration, setEditDuration] = useState(30);
+    const [editNote, setEditNote] = useState('');
 
     useEffect(() => {
         if (activeTab === 'new-appointment') {
@@ -16,27 +29,49 @@ export default function Dashboard({ user }) {
                 setDoctors(doctorList);
             };
             fetchDoctors();
-        } else if (activeTab === 'my-appointments') {
+        } else if (activeTab === 'my-appointments' || activeTab === 'doctor-calendar'|| activeTab === 'secretary-appointments') {
             const fetchAppointments = async () => {
                 try {
                     const allAppointments = await getAppointments();
 
-                    console.log("Backend'den Gelen Tüm Randevular:", allAppointments);
-                    console.log("Şu an giriş yapan hastanın ID'si:", user.id);
-
-                    //randevuları giriş yapan hastaya göre filtrele
-                    const myApps = allAppointments.filter(app => app.patient && app.patient.id === user.id);
-
-                    console.log("Ekrana basılacak olan (Filtrelenmiş) Randevular:", myApps);
-
-                    setAppointments(myApps);
+                    // randevuları giriş yapan kullanıcıya göre filtrele
+                    if (user.role === 'ROLE_PATIENT') {
+                        setAppointments(allAppointments.filter(app => app.patient && app.patient.id === user.id));
+                    } else if (user.role === 'ROLE_DOCTOR') {
+                        setAppointments(allAppointments.filter(app => app.doctor && app.doctor.id === user.id));
+                    }
+                    else if (user.role === 'ROLE_SECRETARY') {
+                        //sekreter herkesin rndevusunu görür.
+                        setAppointments(allAppointments);
+                    }
                 } catch (error) {
                     console.error("Randevular çekilemedi:", error);
                 }
             };
+
             fetchAppointments();
         }
     }, [activeTab, user.id]);
+
+    //randevu kaydetme fonksiyonu
+    const handleSaveAppointment = async () => {
+        console.log("Kullanıcı Bilgileri:", user);
+        if (!selectedDoctor || !selectedDate) {
+            alert("Lütfen doktor ve tarih seçiniz!");
+            return;
+        }
+
+        try {
+            await createAppointment(user.id, selectedDoctor, selectedDate);
+            alert("Randevunuz başarıyla oluşturuldu!");
+            setActiveTab('menu');
+            setSelectedDoctor('');
+            setSelectedDate('');
+        } catch (error) {
+            console.error("Randevu kaydedilemedi:", error);
+            alert("Randevu alınırken bir hata oluştu.");
+        }
+    };
 
     return (
         <div className="dc-dashboard">
@@ -48,7 +83,6 @@ export default function Dashboard({ user }) {
                     box-shadow: 0 15px 35px rgba(20, 90, 90, 0.08), 0 4px 10px rgba(20, 90, 90, 0.05);
                     font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
                 }
-
                 .dc-section-title {
                     display: flex;
                     align-items: center;
@@ -60,20 +94,17 @@ export default function Dashboard({ user }) {
                     padding-bottom: 14px;
                     border-bottom: 2px solid #e6f2f0;
                 }
-
                 .dc-section-dot {
                     width: 10px;
                     height: 10px;
                     border-radius: 50%;
                     flex-shrink: 0;
                 }
-
                 .dc-card-grid {
                     display: flex;
                     gap: 16px;
                     flex-wrap: wrap;
                 }
-
                 .dc-card {
                     flex: 1;
                     min-width: 200px;
@@ -89,12 +120,10 @@ export default function Dashboard({ user }) {
                     box-shadow: 0 10px 22px rgba(20, 90, 90, 0.18);
                     transition: transform 0.18s ease, box-shadow 0.18s ease;
                 }
-
                 .dc-card:hover {
                     transform: translateY(-3px);
                     box-shadow: 0 14px 28px rgba(20, 90, 90, 0.26);
                 }
-
                 .dc-card::after {
                     content: "";
                     position: absolute;
@@ -105,7 +134,6 @@ export default function Dashboard({ user }) {
                     border-radius: 50%;
                     background: rgba(255, 255, 255, 0.14);
                 }
-
                 .dc-card-icon {
                     width: 34px;
                     height: 34px;
@@ -116,7 +144,6 @@ export default function Dashboard({ user }) {
                     justify-content: center;
                     margin-bottom: 14px;
                 }
-
                 .dc-back-btn {
                     display: inline-flex;
                     align-items: center;
@@ -132,24 +159,20 @@ export default function Dashboard({ user }) {
                     font-weight: 600;
                     transition: background 0.15s ease;
                 }
-
                 .dc-back-btn:hover {
                     background: #e0eae8;
                 }
-
                 .dc-form-title {
                     color: #21867a;
                     font-size: 17px;
                     font-weight: 700;
                     margin: 0 0 4px;
                 }
-
                 .dc-form-subtitle {
                     color: #6c8a89;
                     font-size: 13.5px;
                     margin: 0 0 18px;
                 }
-
                 .dc-form-box {
                     padding: 24px;
                     background: #f9fcfb;
@@ -160,7 +183,6 @@ export default function Dashboard({ user }) {
                     gap: 16px;
                     max-width: 420px;
                 }
-
                 .dc-form-field label {
                     font-weight: 600;
                     font-size: 13px;
@@ -168,7 +190,6 @@ export default function Dashboard({ user }) {
                     display: block;
                     margin-bottom: 6px;
                 }
-
                 .dc-select, .dc-datetime {
                     width: 100%;
                     padding: 11px 14px;
@@ -181,13 +202,11 @@ export default function Dashboard({ user }) {
                     font-family: inherit;
                     transition: border-color 0.2s ease, box-shadow 0.2s ease;
                 }
-
                 .dc-select:focus, .dc-datetime:focus {
                     outline: none;
                     border-color: #2a9d8f;
                     box-shadow: 0 0 0 4px rgba(42, 157, 143, 0.12);
                 }
-
                 .dc-confirm-btn {
                     padding: 13px;
                     background: linear-gradient(135deg, #2a9d8f, #21867a);
@@ -200,17 +219,16 @@ export default function Dashboard({ user }) {
                     box-shadow: 0 10px 20px rgba(33, 134, 122, 0.28);
                     transition: transform 0.15s ease, box-shadow 0.15s ease;
                 }
-
                 .dc-confirm-btn:hover {
                     transform: translateY(-1px);
                     box-shadow: 0 14px 24px rgba(33, 134, 122, 0.35);
                 }
             `}</style>
 
-            {/* hasta ekran */}
+            {/*hasta ekranı*/}
             {user.role === 'ROLE_PATIENT' && (
                 <div>
-                    {/*menu butonu */}
+                    {/* menu buton*/}
                     {activeTab === 'menu' && (
                         <>
                             <h3 className="dc-section-title">
@@ -221,7 +239,7 @@ export default function Dashboard({ user }) {
                                 <div
                                     className="dc-card"
                                     style={{ background: 'linear-gradient(135deg, #2a9d8f, #21867a)' }}
-                                    onClick={() => setActiveTab('new-appointment')} // Tıklanınca formu aç
+                                    onClick={() => setActiveTab('new-appointment')}
                                 >
                                     <div className="dc-card-icon">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -235,9 +253,11 @@ export default function Dashboard({ user }) {
                                     </div>
                                     Yeni Randevu Al
                                 </div>
+
                                 <div
                                     className="dc-card"
                                     style={{ background: 'linear-gradient(135deg, #3fb6a8, #2a9d8f)' }}
+                                    onClick={() => setActiveTab('my-appointments')}
                                 >
                                     <div className="dc-card-icon">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -245,20 +265,22 @@ export default function Dashboard({ user }) {
                                             <polyline points="12 7 12 12 15 14" />
                                         </svg>
                                     </div>
-                                    Geçmiş Randevularım
+                                    Randevularım
                                 </div>
                             </div>
                         </>
                     )}
-                    {/*kullanıcı kendi randevularını görecek*/}
+
+                    {/* kullanıcının randevuları*/}
                     {activeTab === 'my-appointments' && (
                         <div>
                             <button
                                 onClick={() => setActiveTab('menu')}
                                 style={{ marginBottom: '15px', padding: '8px 15px', cursor: 'pointer', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px' }}
                             >
-                                ← Geri Dön
+                                &larr; Geri Dön
                             </button>
+
                             <h3 style={{ color: '#2980b9' }}>Geçmiş Randevularım</h3>
 
                             {appointments.length === 0 ? (
@@ -270,22 +292,16 @@ export default function Dashboard({ user }) {
                                     {appointments.map(app => (
                                         <li key={app.id} style={{ padding: '15px', border: '1px solid #e0e0e0', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#fdfdfd', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
                                             <div style={{ fontSize: '16px', marginBottom: '8px' }}>
-                                                <strong>👨‍⚕️ Doktor:</strong> Dr. {app.doctor?.name} {app.doctor?.surname}
+                                                <strong>Doktor:</strong> Dr. {app.doctor?.name} {app.doctor?.surname}
                                             </div>
                                             <div style={{ fontSize: '15px', marginBottom: '8px', color: '#555' }}>
-                                                <strong>📅 Tarih:</strong> {new Date(app.appointmentDate).toLocaleString('tr-TR')}
+                                                <strong>Tarih:</strong> {new Date(app.appointmentDate).toLocaleString('tr-TR')}
                                             </div>
                                             <div style={{ fontSize: '14px' }}>
-                                                <strong>📌 Durum:</strong>
-                                                <span style={{
-                                                    marginLeft: '10px',
-                                                    padding: '4px 8px',
-                                                    borderRadius: '12px',
-                                                    backgroundColor: app.status === 'PENDING' ? '#f39c12' : '#27ae60',
-                                                    color: 'white'
-                                                }}>
-                                {app.status === 'PENDING' ? '⏳ Onay Bekliyor' : '✅ Onaylandı'}
-                            </span>
+                                                <strong>Durum:</strong>
+                                                <span style={{ marginLeft: '10px', padding: '4px 8px', borderRadius: '12px', backgroundColor: app.status === 'PENDING' ? '#f39c12' : '#27ae60', color: 'white' }}>
+                                                    {app.status === 'PENDING' ? 'Onay Bekliyor' : 'Onaylandı'}
+                                                </span>
                                             </div>
                                         </li>
                                     ))}
@@ -295,21 +311,20 @@ export default function Dashboard({ user }) {
                     )}
 
 
-                    {/* randevu eklme butonu */}
+                    {/*yenş randevu*/}
                     {activeTab === 'new-appointment' && (
                         <div>
                             <button
                                 className="dc-back-btn"
                                 onClick={() => setActiveTab('menu')}
                             >
-                                ← Geri Dön
+                                &larr; Geri Dön
                             </button>
 
                             <h3 className="dc-form-title">Yeni Randevu Oluştur</h3>
                             <p className="dc-form-subtitle">Lütfen doktor ve uygun tarih seçin</p>
 
                             <div className="dc-form-box">
-
                                 <div className="dc-form-field">
                                     <label>Doktor Seçin</label>
                                     <select
@@ -338,80 +353,233 @@ export default function Dashboard({ user }) {
 
                                 <button
                                     className="dc-confirm-btn"
-                                    onClick={() => console.log("Seçilen Doktor ID:", selectedDoctor, "Tarih:", selectedDate)}
+                                    onClick={handleSaveAppointment}
                                 >
                                     Randevuyu Onayla
                                 </button>
-
                             </div>
                         </div>
                     )}
                 </div>
             )}
 
-            {/* doktor-sekreter ekranı*/}
+            {/*doktor ekranı*/}
             {user.role === 'ROLE_DOCTOR' && (
                 <div>
-                    <h3 className="dc-section-title">
-                        <span className="dc-section-dot" style={{ background: '#27ae60' }} />
-                        Doktor İşlemleri
-                    </h3>
-                    <div className="dc-card-grid">
-                        <div className="dc-card" style={{ background: 'linear-gradient(135deg, #27ae60, #1e8449)' }}>
-                            <div className="dc-card-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                                    <line x1="16" y1="2" x2="16" y2="6" />
-                                    <line x1="8" y1="2" x2="8" y2="6" />
-                                    <line x1="3" y1="10" x2="21" y2="10" />
-                                </svg>
+                    {/* doktor ana ekran */}
+                    {activeTab === 'menu' && (
+                        <>
+                            <h3 className="dc-section-title">
+                                <span className="dc-section-dot" style={{ background: '#27ae60' }} />
+                                Doktor İşlemleri
+                            </h3>
+                            <div className="dc-card-grid">
+                                <div
+                                    className="dc-card"
+                                    style={{ background: 'linear-gradient(135deg, #27ae60, #1e8449)' }}
+                                    onClick={() => setActiveTab('doctor-calendar')}
+                                >
+                                    <div className="dc-card-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" />
+                                            <line x1="16" y1="2" x2="16" y2="6" />
+                                            <line x1="8" y1="2" x2="8" y2="6" />
+                                            <line x1="3" y1="10" x2="21" y2="10" />
+                                        </svg>
+                                    </div>
+                                    Randevularım (Takvim)
+                                </div>
+                                <div className="dc-card" style={{ background: 'linear-gradient(135deg, #52c47f, #27ae60)' }}>
+                                    <div className="dc-card-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                                        </svg>
+                                    </div>
+                                    Hasta Geçmişi İncele
+                                </div>
                             </div>
-                            Bugünkü Randevularım
-                        </div>
-                        <div className="dc-card" style={{ background: 'linear-gradient(135deg, #52c47f, #27ae60)' }}>
-                            <div className="dc-card-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                                </svg>
+                        </>
+                    )}
+
+                    {/* doktor takvim ekranı */}
+                    {activeTab === 'doctor-calendar' && (
+                        <div style={{ marginTop: '20px' }}>
+                            <button
+                                onClick={() => setActiveTab('menu')}
+                                style={{ marginBottom: '15px', padding: '8px 15px', cursor: 'pointer', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px' }}
+                            >
+                                &larr; Geri Dön
+                            </button>
+                            <h3 style={{ color: '#27ae60', marginBottom: '20px' }}>Randevu Takvimim</h3>
+
+                            <div style={{ height: '550px', backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                                <Calendar
+                                    localizer={localizer}
+                                    events={appointments.map(app => ({
+                                        id: app.id,
+                                        title: `Hasta: ${app.patient?.name || 'Bilinmiyor'} ${app.patient?.surname || ''}`,
+                                        start: new Date(app.appointmentDate),
+                                        end: new Date(new Date(app.appointmentDate).getTime() + 30 * 60000), // Randevuyu 30 dk blok olarak göster
+                                    }))}
+                                    startAccessor="start"
+                                    endAccessor="end"
+                                    messages={{
+                                        next: "İleri",
+                                        previous: "Geri",
+                                        today: "Bugün",
+                                        month: "Ay",
+                                        week: "Hafta",
+                                        day: "Gün",
+                                        agenda: "Ajanda",
+                                        noEventsInRange: "Bu aralıkta randevu bulunmamaktadır."
+                                    }}
+                                />
                             </div>
-                            Hasta Geçmişi İncele
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
 
+            {/* sekreter/admin ekranı*/}
             {user.role === 'ROLE_SECRETARY' && (
                 <div>
-                    <h3 className="dc-section-title">
-                        <span className="dc-section-dot" style={{ background: '#8e44ad' }} />
-                        Sekreter / Klinik Yönetimi
-                    </h3>
-                    <div className="dc-card-grid">
-                        <div className="dc-card" style={{ background: 'linear-gradient(135deg, #8e44ad, #6c3483)' }}>
-                            <div className="dc-card-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                                    <line x1="16" y1="2" x2="16" y2="6" />
-                                    <line x1="8" y1="2" x2="8" y2="6" />
-                                    <line x1="3" y1="10" x2="21" y2="10" />
-                                </svg>
+                    {activeTab === 'menu' && (
+                        <>
+                            <h3 className="dc-section-title">
+                                <span className="dc-section-dot" style={{ background: '#8e44ad' }} />
+                                Sekreter / Klinik Yönetimi
+                            </h3>
+                            <div className="dc-card-grid">
+                                <div
+                                    className="dc-card"
+                                    style={{ background: 'linear-gradient(135deg, #8e44ad, #6c3483)' }}
+                                    onClick={() => setActiveTab('secretary-appointments')}
+                                >
+                                    <div className="dc-card-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" />
+                                            <line x1="16" y1="2" x2="16" y2="6" />
+                                            <line x1="8" y1="2" x2="8" y2="6" />
+                                            <line x1="3" y1="10" x2="21" y2="10" />
+                                        </svg>
+                                    </div>
+                                    Tüm Randevuları ve Onayları Gör
+                                </div>
+                                <div className="dc-card" style={{ background: 'linear-gradient(135deg, #a569bd, #8e44ad)' }}>
+                                    <div className="dc-card-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M4 6h16" />
+                                            <path d="M4 12h16" />
+                                            <path d="M4 18h10" />
+                                        </svg>
+                                    </div>
+                                    Doktor Takvimi Düzenle
+                                </div>
                             </div>
-                            Tüm Randevuları Gör
+                        </>
+                    )}
+
+                    {/* sekreter onay ve düzenleme ekranı*/}
+                    {activeTab === 'secretary-appointments' && (
+                        <div>
+                            <button
+                                onClick={() => setActiveTab('menu')}
+                                style={{ marginBottom: '15px', padding: '8px 15px', cursor: 'pointer', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px' }}
+                            >
+                                &larr; Geri Dön
+                            </button>
+
+                            <h3 style={{ color: '#8e44ad', marginBottom: '20px' }}>Klinik Randevu Yönetimi</h3>
+
+                            {appointments.length === 0 ? (
+                                <div style={{ padding: '20px', background: '#f8f9fa', borderRadius: '5px', color: '#7f8c8d' }}>
+                                    Sistemde kayıtlı randevu bulunmamaktadır.
+                                </div>
+                            ) : (
+                                <ul style={{ listStyleType: 'none', padding: 0 }}>
+                                    {appointments.map(app => (
+                                        <li key={app.id} style={{ padding: '15px', border: '1px solid #e0e0e0', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#fdfdfd' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <div>
+                                                    <div style={{ fontSize: '16px', marginBottom: '8px' }}>
+                                                        <strong>Hasta:</strong> {app.patient?.name} {app.patient?.surname} <br/>
+                                                        <strong>Doktor:</strong> Dr. {app.doctor?.name} {app.doctor?.surname}
+                                                    </div>
+                                                    <div style={{ fontSize: '14px', marginBottom: '8px', color: '#555' }}>
+                                                        <strong>Tarih:</strong> {new Date(app.appointmentDate).toLocaleString('tr-TR')}
+                                                        {app.duration && <span style={{ marginLeft: '10px' }}>{app.duration} Dk</span>}
+                                                    </div>
+                                                    <div style={{ fontSize: '14px', color: '#2c3e50', fontStyle: 'italic', marginBottom: '10px' }}>
+                                                        {app.note && ` Not: ${app.note}`}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                        <span style={{ padding: '6px 10px', borderRadius: '12px', backgroundColor: app.status === 'APPROVED' ? '#27ae60' : (app.status === 'REJECTED' ? '#e74c3c' : '#f39c12'), color: 'white', fontSize: '13px' }}>
+                                            {app.status === 'APPROVED' ? 'Onaylandı' : (app.status === 'REJECTED' ? 'Reddedildi' : 'Onay Bekliyor')}
+                                        </span>
+                                                </div>
+                                            </div>
+
+                                            {/*düzenleme formu*/}
+                                            {editingAppId === app.id ? (
+                                                <div style={{ marginTop: '15px', padding: '15px', background: '#f4f6f6', borderRadius: '8px', border: '1px dashed #bdc3c7' }}>
+                                                    <div style={{ marginBottom: '10px' }}>
+                                                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Tahmini Süre (Dakika):</label>
+                                                        <input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }} />
+                                                    </div>
+                                                    <div style={{ marginBottom: '10px' }}>
+                                                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Doktora Not:</label>
+                                                        <textarea value={editNote} onChange={(e) => setEditNote(e.target.value)} rows="2" style={{ width: '100%', padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }} placeholder="Örn: Kanal tedavisi için röntgen çekilecek..."></textarea>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                                        <button
+                                                            style={{ padding: '8px 12px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                                                            onClick={async () => {
+                                                                try {
+                                                                    //backende güncellme
+                                                                    await updateAppointment(app.id, { status: 'APPROVED', note: editNote, duration: Number(editDuration) });
+                                                                    //anlık değişiklik gösterilisn
+                                                                    setAppointments(appointments.map(a => a.id === app.id ? { ...a, status: 'APPROVED', note: editNote, duration: Number(editDuration) } : a));
+                                                                    setEditingAppId(null);
+                                                                } catch (error) {
+                                                                    alert("Güncelleme başarısız!");
+                                                                }
+                                                            }}
+                                                        >
+                                                            Onayla ve Kaydet
+                                                        </button>
+                                                        <button
+                                                            style={{ padding: '8px 12px', background: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                                                            onClick={() => setEditingAppId(null)}
+                                                        >
+                                                            İptal
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                //onaylanmayan randevuları düzenle
+                                                app.status !== 'APPROVED' && (
+                                                    <button
+                                                        style={{ marginTop: '10px', padding: '6px 12px', background: '#3498db', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '13px' }}
+                                                        onClick={() => {
+                                                            setEditingAppId(app.id);
+                                                            setEditDuration(app.duration || 30);
+                                                            setEditNote(app.note || '');
+                                                        }}
+                                                    >
+                                                        Süre/Not Ekle & Onayla
+                                                    </button>
+                                                )
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
-                        <div className="dc-card" style={{ background: 'linear-gradient(135deg, #a569bd, #8e44ad)' }}>
-                            <div className="dc-card-icon">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M4 6h16" />
-                                    <path d="M4 12h16" />
-                                    <path d="M4 18h10" />
-                                </svg>
-                            </div>
-                            Doktor Takvimi Düzenle
-                        </div>
-                    </div>
+                    )}
                 </div>
             )}
         </div>
     );
-}
+    }

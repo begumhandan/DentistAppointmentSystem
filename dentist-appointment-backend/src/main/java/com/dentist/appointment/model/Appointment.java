@@ -26,4 +26,7 @@ public class Appointment {
 
     // randevu durum
     private String status = "PENDING";
+
+    private String note; // Sekreterin doktor için düştüğü not
+    private Integer duration;
 }

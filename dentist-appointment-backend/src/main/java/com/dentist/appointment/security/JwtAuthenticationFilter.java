@@ -32,45 +32,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String username;
+        String jwt = null;
+        String username = null;
 
-        //gelen isteğin başlığında "Authorization" var mı ve "Bearer " ile mi başlıyor?
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response); //yoksa veya hatalıysa diğer filtrelere geç
+            filterChain.doFilter(request, response);
             return;
         }
 
-        // kendisini al ("Bearer " kelimesi 7 karakter olduğu için 7. indexten sonrasını kesiyorum)
         jwt = authHeader.substring(7);
 
-        //token okuyup içindeki email çıkarıyoruz
-        username = jwtService.extractUsername(jwt);
+        // BURAYA TRY-CATCH EKLEDİK! Hata çıkarsa artık çökmeyecek, konsola yazdıracak.
+        try {
+            username = jwtService.extractUsername(jwt);
 
-        //token bir isim yazıyorsa ve bu kişi sisteme henüz giriş yapmamışsa =context boş ise
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-            // databaseden bu kullanıcıyı bulup bilgilerini userdetails getir
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-
-            //token gerçekten bu kullanıcıya mı ait, süresi dolmuş mu kontrol et
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-
-                // token geçerliyse spring securitynin tanıyacağı gerçek bir profil oluştur
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // Güvenlik bağlamına kulanıcıyı koy
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+        } catch (Exception e) {
+            // Arka plandaki sinsi hatayı yakalayıp konsola kırmızı alarmla yazdırıyoruz
+            System.err.println("🚨 JWT FİLTRE HATASI YAKALANDI: " + e.getClass().getSimpleName() + " - " + e.getMessage());
         }
 
-        //işlem bittikten sonra isteği asıl gitmesi gereken yere yolla
         filterChain.doFilter(request, response);
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import org.springframework.security.config.Customizer;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 @EnableWebSecurity
@@ -33,11 +34,15 @@ public class SecurityConfig {
 
                 // hangi adreslere kimlerin erişebileceğini kurallara bağladı
                 .authorizeHttpRequests(auth -> auth
-                        // login register herkese açık
                         .requestMatchers("/api/auth/**").permitAll()
-                        .anyRequest().authenticated() // diğer tüm isteklerde mutlaka token istesin
-                )
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        //hem kök adresi hem de alt adresleri ekledim
+                        .requestMatchers("/api/appointments", "/api/appointments/**").permitAll()
+                        .requestMatchers("/error").permitAll()
+
+                        .anyRequest().authenticated()
+                )
                 // rest Appı olod için oturum susta her istek için ayrı token
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -51,22 +56,23 @@ public class SecurityConfig {
 
         return http.build();
     }
-        @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
-            CorsConfiguration configuration = new CorsConfiguration();
-            // React'in çalıştığı adrese izin veriyoruz
-            configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-            // İzin verilen HTTP metodları (OPTIONS da koyduk)
-            configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-            // İzin verilen başlıklar (Token'ı Authorization başlığında gönderdik)
-            configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
-            // Kimlik bilgilerine (cookie vb.) izin ver
-            configuration.setAllowCredentials(true);
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
 
-            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-            source.registerCorsConfiguration("/**", configuration);
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
 
-            return source;
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
 
     }
 }

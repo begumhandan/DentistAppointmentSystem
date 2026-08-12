@@ -6,6 +6,7 @@ import com.dentist.appointment.repository.AppointmentRepository;
 import com.dentist.appointment.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.dentist.appointment.dto.AppointmentUpdateRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -50,15 +51,25 @@ public class AppointmentService {
     }
 
     //randevu güncellenme
-    public Appointment updateAppointment(String id, Appointment appointmentDetails) {
-        return appointmentRepository.findById(id).map(appointment -> {
-            appointment.setDoctor(appointmentDetails.getDoctor());
-            appointment.setAppointmentDate(appointmentDetails.getAppointmentDate());
-            appointment.setStatus(appointmentDetails.getStatus());
-            return appointmentRepository.save(appointment);
-        }).orElseThrow(() -> new RuntimeException("Randevu bulunamadı"));
+    public Appointment updateAppointment(String id, AppointmentUpdateRequest request) {
+        //databaseden randevuyu bul
+        Appointment appointment = appointmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Güncellenecek randevu bulunamadı!"));
+        //yeni statusu güncelle
+        if (request.getStatus() != null) {
+            appointment.setStatus(request.getStatus());
+        }
+        //notu güncelle
+        if (request.getNote() != null) {
+            appointment.setNote(request.getNote());
+        }
+        //dakika güncelle
+        if (request.getDuration() != null) {
+            appointment.setDuration(request.getDuration());
+        }
+        //datatbase kaydet
+        return appointmentRepository.save(appointment);
     }
-
     //randevu silme
     public void deleteAppointment(String id) {
         appointmentRepository.deleteById(id);

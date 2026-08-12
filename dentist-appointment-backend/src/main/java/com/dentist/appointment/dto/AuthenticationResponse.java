@@ -13,4 +13,6 @@ public class AuthenticationResponse {
     private String token; // üretilen jwt
     private String role;
     private String name;
+
+    private String id;
 }
