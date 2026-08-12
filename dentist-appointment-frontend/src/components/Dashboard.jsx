@@ -14,9 +14,20 @@ export default function Dashboard({ user }) {
     const [doctors, setDoctors] = useState([]);
 
     const [selectedDoctor, setSelectedDoctor] = useState('');
-    const [selectedDate, setSelectedDate] = useState('');
+    const [selectedDay, setSelectedDay] = useState('');
+    const [selectedTime, setSelectedTime] = useState('');
 
-    //renduvalrı tuttuğum state
+// Bugünden önceki tarihleri seçtirmemek için bugünün tarihini alıyoruz
+    const today = new Date().toISOString().split('T')[0];
+
+// 09:00 - 18:00 arası 30 dakikalık periyotlar
+    const timeSlots = [
+        "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+        "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
+        "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"
+    ];
+
+    //rendevuları tuttuğum state
     const [appointments, setAppointments] = useState([]);
     const [editingAppId, setEditingAppId] = useState(null);
     const [editDuration, setEditDuration] = useState(30);
@@ -38,7 +49,9 @@ export default function Dashboard({ user }) {
                     if (user.role === 'ROLE_PATIENT') {
                         setAppointments(allAppointments.filter(app => app.patient && app.patient.id === user.id));
                     } else if (user.role === 'ROLE_DOCTOR') {
-                        setAppointments(allAppointments.filter(app => app.doctor && app.doctor.id === user.id));
+                        setAppointments(allAppointments.filter(app =>
+                            app.doctor && app.doctor.id === user.id && app.status === 'APPROVED'
+                        ));
                     }
                     else if (user.role === 'ROLE_SECRETARY') {
                         //sekreter herkesin rndevusunu görür.
@@ -55,18 +68,21 @@ export default function Dashboard({ user }) {
 
     //randevu kaydetme fonksiyonu
     const handleSaveAppointment = async () => {
-        console.log("Kullanıcı Bilgileri:", user);
-        if (!selectedDoctor || !selectedDate) {
-            alert("Lütfen doktor ve tarih seçiniz!");
+        if (!selectedDoctor || !selectedDay || !selectedTime) {
+            alert("Lütfen doktor, tarih ve saat seçiminizi tamamlayınız!");
             return;
         }
 
         try {
-            await createAppointment(user.id, selectedDoctor, selectedDate);
+            // Seçilen gün ve saati backend'in istediği LocalDateTime formatına birleştirdik.
+            const finalDateTime = `${selectedDay}T${selectedTime}:00`;
+
+            await createAppointment(user.id, selectedDoctor, finalDateTime);
             alert("Randevunuz başarıyla oluşturuldu!");
             setActiveTab('menu');
             setSelectedDoctor('');
-            setSelectedDate('');
+            setSelectedDay('');
+            setSelectedTime('');
         } catch (error) {
             console.error("Randevu kaydedilemedi:", error);
             alert("Randevu alınırken bir hata oluştu.");
@@ -342,14 +358,43 @@ export default function Dashboard({ user }) {
                                 </div>
 
                                 <div className="dc-form-field">
-                                    <label>Tarih ve Saat Seçin</label>
+                                    <label>Tarih Seçin</label>
+                                    {/* min={today} sayesinde geçmiş tarihler tıklanamaz hale gelir */}
                                     <input
-                                        type="datetime-local"
-                                        className="dc-datetime"
-                                        value={selectedDate}
-                                        onChange={(e) => setSelectedDate(e.target.value)}
+                                        type="date"
+                                        className="dc-select"
+                                        min={today}
+                                        value={selectedDay}
+                                        onChange={(e) => setSelectedDay(e.target.value)}
                                     />
                                 </div>
+
+                                {/* Sadece tarih seçildikten sonra saatler görünecek */}
+                                {selectedDay && (
+                                    <div className="dc-form-field">
+                                        <label>Uygun Saatler</label>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                                            {timeSlots.map(time => (
+                                                <button
+                                                    key={time}
+                                                    onClick={() => setSelectedTime(time)}
+                                                    style={{
+                                                        padding: '10px',
+                                                        borderRadius: '8px',
+                                                        border: selectedTime === time ? '2px solid #27ae60' : '1px solid #dce8e7',
+                                                        backgroundColor: selectedTime === time ? '#e8f8f5' : '#ffffff',
+                                                        color: selectedTime === time ? '#27ae60' : '#2c3e50',
+                                                        fontWeight: selectedTime === time ? 'bold' : 'normal',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    {time}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <button
                                     className="dc-confirm-btn"
@@ -366,7 +411,6 @@ export default function Dashboard({ user }) {
             {/*doktor ekranı*/}
             {user.role === 'ROLE_DOCTOR' && (
                 <div>
-                    {/* doktor ana ekran */}
                     {activeTab === 'menu' && (
                         <>
                             <h3 className="dc-section-title">
@@ -402,7 +446,7 @@ export default function Dashboard({ user }) {
                         </>
                     )}
 
-                    {/* doktor takvim ekranı */}
+                    {/* takvim-not */}
                     {activeTab === 'doctor-calendar' && (
                         <div style={{ marginTop: '20px' }}>
                             <button
@@ -413,6 +457,7 @@ export default function Dashboard({ user }) {
                             </button>
                             <h3 style={{ color: '#27ae60', marginBottom: '20px' }}>Randevu Takvimim</h3>
 
+                            {/*takvim */}
                             <div style={{ height: '550px', backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
                                 <Calendar
                                     localizer={localizer}
@@ -420,7 +465,7 @@ export default function Dashboard({ user }) {
                                         id: app.id,
                                         title: `Hasta: ${app.patient?.name || 'Bilinmiyor'} ${app.patient?.surname || ''}`,
                                         start: new Date(app.appointmentDate),
-                                        end: new Date(new Date(app.appointmentDate).getTime() + 30 * 60000), // Randevuyu 30 dk blok olarak göster
+                                        end: new Date(new Date(app.appointmentDate).getTime() + (app.duration || 30) * 60000),
                                     }))}
                                     startAccessor="start"
                                     endAccessor="end"
@@ -435,6 +480,83 @@ export default function Dashboard({ user }) {
                                         noEventsInRange: "Bu aralıkta randevu bulunmamaktadır."
                                     }}
                                 />
+                            </div>
+
+                            {/* TEDAVİ NOTU LİSTESİ (Takvimin altına taşındı) */}
+                            <div style={{ marginTop: '30px' }}>
+                                <h4 style={{ color: '#27ae60', marginBottom: '15px' }}>Randevu Tedavi Notları ve Geçmişi</h4>
+
+                                {appointments.length === 0 ? (
+                                    <div style={{ padding: '15px', background: '#f8f9fa', borderRadius: '5px', color: '#7f8c8d' }}>
+                                        Onaylanmış randevunuz bulunmamaktadır.
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                        {appointments.map(app => (
+                                            <div key={app.id} style={{ padding: '15px', border: '1px solid #e2edec', borderRadius: '10px', background: '#f9fcfb' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                                    <div>
+                                                        <strong>Hasta:</strong> {app.patient?.name} {app.patient?.surname} |
+                                                        <span style={{ marginLeft: '10px', color: '#555' }}>
+                                                            {new Date(app.appointmentDate).toLocaleString('tr-TR')}
+                                                        </span>
+                                                    </div>
+                                                    <span style={{ padding: '4px 8px', borderRadius: '10px', backgroundColor: '#27ae60', color: 'white', fontSize: '12px' }}>
+                                                        Onaylandı
+                                                    </span>
+                                                </div>
+
+                                                <div style={{ fontSize: '14px', color: '#333', marginBottom: '10px' }}>
+                                                    <strong>Mevcut Not / İşlem:</strong> {app.note || 'Henüz not girilmemiş.'}
+                                                </div>
+
+                                                {/* Not güncelleme alanı */}
+                                                {editingAppId === app.id ? (
+                                                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                                                        <input
+                                                            type="text"
+                                                            value={editNote}
+                                                            onChange={(e) => setEditNote(e.target.value)}
+                                                            placeholder="Örn: Dolgu yapıldı, 20lik diş kontrol edildi..."
+                                                            style={{ flex: 1, padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }}
+                                                        />
+                                                        <button
+                                                            style={{ padding: '8px 15px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                                                            onClick={async () => {
+                                                                try {
+                                                                    await updateAppointment(app.id, { note: editNote });
+                                                                    setAppointments(appointments.map(a => a.id === app.id ? { ...a, note: editNote } : a));
+                                                                    setEditingAppId(null);
+                                                                    alert("Tedavi notu başarıyla güncellendi!");
+                                                                } catch (error) {
+                                                                    alert("Not güncellenemedi!");
+                                                                }
+                                                            }}
+                                                        >
+                                                            Kaydet
+                                                        </button>
+                                                        <button
+                                                            style={{ padding: '8px 15px', background: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+                                                            onClick={() => setEditingAppId(null)}
+                                                        >
+                                                            İptal
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        style={{ padding: '6px 12px', background: '#2980b9', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '13px' }}
+                                                        onClick={() => {
+                                                            setEditingAppId(app.id);
+                                                            setEditNote(app.note || '');
+                                                        }}
+                                                    >
+                                                        Tedavi Notunu Güncelle
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
