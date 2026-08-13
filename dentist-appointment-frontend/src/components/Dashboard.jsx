@@ -10,7 +10,12 @@ moment.locale('tr');
 const localizer = momentLocalizer(moment);
 
 export default function Dashboard({ user }) {
-    const [activeTab, setActiveTab] = useState('menu');
+// Giriş yapan kişiye göre ilk açılacak ekranı belirledik.
+    const [activeTab, setActiveTab] = useState(
+        user.role === 'ROLE_DOCTOR' ? 'doctor-calendar' :
+            user.role === 'ROLE_SECRETARY' ? 'secretary-master-calendar' :
+                'menu'
+    );
     const [doctors, setDoctors] = useState([]);
 
     const [selectedDoctor, setSelectedDoctor] = useState('');
@@ -160,20 +165,20 @@ export default function Dashboard({ user }) {
     };
     //takvimde randevunun durumuna göre renk faklı olucak
     const eventStyleGetter = (event, start, end, isSelected) => {
-        let backgroundColor = '#f39c12'; // PENDING (Onay Bekliyor - Turuncu)
+        let backgroundColor = '#e2a63e'; // PENDING (Onay Bekliyor - Amber)
 
         if (event.originalData.status === 'APPROVED') {
-            backgroundColor = '#27ae60'; // APPROVED (Onaylandı - Yeşil)
+            backgroundColor = '#2a9d8f'; // APPROVED (Onaylandı - Teal)
         } else if (event.originalData.status === 'REJECTED') {
-            backgroundColor = '#e74c3c'; // REJECTED (İptal - Kırmızı)
+            backgroundColor = '#d1665c'; // REJECTED (İptal - Kırmızı)
         }else if (event.originalData.status === 'RESCHEDULED_BY_CLINIC') {
-            backgroundColor = '#3498db'; // MAVİ (Hastadan onay bekleyen)
+            backgroundColor = '#4a90c4'; // MAVİ (Hastadan onay bekleyen)
         }
         return {
             style: {
                 backgroundColor,
-                borderRadius: '5px',
-                opacity: 0.9,
+                borderRadius: '6px',
+                opacity: 0.95,
                 color: 'white',
                 border: 'none',
                 display: 'block',
@@ -194,6 +199,7 @@ export default function Dashboard({ user }) {
                     border-radius: 18px;
                     box-shadow: 0 15px 35px rgba(20, 90, 90, 0.08), 0 4px 10px rgba(20, 90, 90, 0.05);
                     font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                    color: #123b3a;
                 }
                 .dc-section-title {
                     display: flex;
@@ -255,6 +261,99 @@ export default function Dashboard({ user }) {
                     align-items: center;
                     justify-content: center;
                     margin-bottom: 14px;
+                }
+
+                .dc-welcome-banner {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    padding: 22px 24px;
+                    border-radius: 16px;
+                    background: linear-gradient(135deg, #f2faf8, #e8f6f3);
+                    border: 1.5px solid #dcefeb;
+                    margin-bottom: 26px;
+                }
+                .dc-welcome-icon {
+                    width: 54px;
+                    height: 54px;
+                    border-radius: 14px;
+                    background: linear-gradient(135deg, #2a9d8f, #21867a);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                    box-shadow: 0 8px 18px rgba(42, 157, 143, 0.3);
+                }
+                .dc-welcome-title {
+                    margin: 0 0 4px;
+                    font-size: 19px;
+                    font-weight: 700;
+                    color: #123b3a;
+                }
+                .dc-welcome-subtitle {
+                    margin: 0;
+                    font-size: 13.5px;
+                    color: #5b7574;
+                }
+
+                .dc-card-big {
+                    padding: 28px 26px;
+                    min-width: 240px;
+                }
+                .dc-card-title {
+                    font-size: 17px;
+                    font-weight: 700;
+                    margin-bottom: 8px;
+                }
+                .dc-card-desc {
+                    font-size: 13px;
+                    font-weight: 400;
+                    opacity: 0.92;
+                    line-height: 1.5;
+                    margin-bottom: 18px;
+                }
+                .dc-card-arrow {
+                    font-size: 12.5px;
+                    font-weight: 700;
+                    opacity: 0.95;
+                }
+
+                .dc-info-strip {
+                    display: flex;
+                    gap: 14px;
+                    flex-wrap: wrap;
+                    margin-top: 22px;
+                }
+                .dc-info-tile {
+                    flex: 1;
+                    min-width: 220px;
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 12px;
+                    padding: 16px;
+                    border-radius: 12px;
+                    background: #fbfdfd;
+                    border: 1.5px solid #eef3f2;
+                }
+                .dc-info-tile-icon {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    flex-shrink: 0;
+                }
+                .dc-info-tile-title {
+                    font-size: 13px;
+                    font-weight: 700;
+                    color: #123b3a;
+                    margin-bottom: 2px;
+                }
+                .dc-info-tile-text {
+                    font-size: 12px;
+                    color: #6c8a89;
+                    line-height: 1.4;
                 }
                 .dc-back-btn {
                     display: inline-flex;
@@ -335,6 +434,334 @@ export default function Dashboard({ user }) {
                     transform: translateY(-1px);
                     box-shadow: 0 14px 24px rgba(33, 134, 122, 0.35);
                 }
+
+                .dc-panel {
+                    background: #ffffff;
+                    padding: 20px;
+                    border-radius: 14px;
+                    border: 1.5px solid #eef3f2;
+                    box-shadow: 0 4px 14px rgba(20, 90, 90, 0.05);
+                }
+                .dc-panel-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    flex-wrap: wrap;
+                    gap: 12px;
+                }
+                .dc-panel-header h3 {
+                    margin: 0;
+                    font-size: 17px;
+                    font-weight: 700;
+                }
+                .dc-action-btn {
+                    padding: 10px 16px;
+                    cursor: pointer;
+                    color: white;
+                    border: none;
+                    border-radius: 9px;
+                    font-weight: 600;
+                    font-size: 13.5px;
+                    box-shadow: 0 8px 16px rgba(20, 90, 90, 0.15);
+                    transition: transform 0.15s ease;
+                }
+                .dc-action-btn:hover { transform: translateY(-1px); }
+
+                .dc-list-item {
+                    padding: 16px 18px;
+                    border: 1.5px solid #eef3f2;
+                    border-radius: 12px;
+                    margin-bottom: 14px;
+                    background: #fdfefe;
+                    box-shadow: 0 2px 8px rgba(20, 90, 90, 0.04);
+                }
+                .dc-list-item strong { color: #123b3a; }
+                .dc-badge {
+                    padding: 5px 12px;
+                    border-radius: 999px;
+                    color: white;
+                    font-size: 12.5px;
+                    font-weight: 700;
+                    letter-spacing: 0.2px;
+                }
+                .dc-empty-state {
+                    padding: 20px;
+                    background: #f7fafa;
+                    border-radius: 10px;
+                    color: #7d9998;
+                    border: 1px dashed #d9e6e5;
+                }
+
+                .dc-search-input {
+                    width: 100%;
+                    padding: 12px 14px;
+                    border-radius: 10px;
+                    border: 1.5px solid #dce8e7;
+                    font-size: 14.5px;
+                    box-sizing: border-box;
+                    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+                }
+                .dc-search-input:focus {
+                    outline: none;
+                    border-color: #2a9d8f;
+                    box-shadow: 0 0 0 4px rgba(42, 157, 143, 0.12);
+                }
+
+                .dc-patient-row {
+                    padding: 14px 16px;
+                    background: #f9fcfb;
+                    border: 1.5px solid #e2edec;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    transition: background 0.15s ease, border-color 0.15s ease;
+                }
+                .dc-patient-row:hover {
+                    background: #eef7f6;
+                    border-color: #bfe0db;
+                }
+
+                .dc-history-entry {
+                    padding: 16px;
+                    border-left: 4px solid #2a9d8f;
+                    background: #f9fcfb;
+                    border-radius: 0 10px 10px 0;
+                }
+
+                .dc-slot-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 10px;
+                }
+                .dc-slot-btn {
+                    padding: 10px;
+                    border-radius: 8px;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                }
+
+                .dc-steps {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 22px;
+                    max-width: 420px;
+                }
+                .dc-step {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 6px;
+                }
+                .dc-step span {
+                    font-size: 11.5px;
+                    font-weight: 600;
+                    color: #9db3b2;
+                }
+                .dc-step.active span, .dc-step.done span {
+                    color: #21867a;
+                }
+                .dc-step-circle {
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 13px;
+                    font-weight: 700;
+                    background: #eef3f2;
+                    color: #9db3b2;
+                    border: 2px solid #eef3f2;
+                    transition: all 0.2s ease;
+                }
+                .dc-step.active .dc-step-circle {
+                    background: #ffffff;
+                    color: #21867a;
+                    border-color: #2a9d8f;
+                }
+                .dc-step.done .dc-step-circle {
+                    background: #2a9d8f;
+                    color: #ffffff;
+                    border-color: #2a9d8f;
+                }
+                .dc-step-line {
+                    flex: 1;
+                    height: 2px;
+                    background: #eef3f2;
+                    margin: 0 8px 20px;
+                }
+                .dc-step-line.done {
+                    background: #2a9d8f;
+                }
+
+                .dc-form-box-wide {
+                    max-width: 460px;
+                }
+
+                .dc-slot-legend {
+                    display: flex;
+                    gap: 12px;
+                }
+                .dc-slot-legend span {
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    font-size: 11px;
+                    color: #6c8a89;
+                    font-weight: 500;
+                }
+                .dc-slot-legend i {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 3px;
+                    display: inline-block;
+                }
+
+                .dc-summary-box {
+                    background: #f2faf8;
+                    border: 1.5px solid #cfe9e3;
+                    border-radius: 12px;
+                    padding: 16px 18px;
+                }
+                .dc-summary-title {
+                    font-size: 12.5px;
+                    font-weight: 700;
+                    color: #21867a;
+                    margin-bottom: 10px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.4px;
+                }
+                .dc-summary-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 6px 0;
+                    font-size: 13.5px;
+                }
+                .dc-summary-row span {
+                    color: #5b7574;
+                }
+                .dc-summary-row strong {
+                    color: #123b3a;
+                }
+
+                .dc-filter-bar {
+                    background: #f7fafa;
+                    padding: 16px;
+                    border-radius: 12px;
+                    margin-bottom: 20px;
+                    border: 1.5px solid #e2edec;
+                    display: flex;
+                    gap: 15px;
+                    flex-wrap: wrap;
+                    align-items: flex-end;
+                }
+                .dc-filter-field { flex: 1; min-width: 150px; }
+                .dc-filter-field label {
+                    display: block;
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #2c4a49;
+                    margin-bottom: 5px;
+                }
+                .dc-filter-field input {
+                    width: 100%;
+                    padding: 10px;
+                    border-radius: 7px;
+                    border: 1.5px solid #dce8e7;
+                    box-sizing: border-box;
+                }
+                .dc-filter-clear {
+                    padding: 10px 16px;
+                    background: #7d9998;
+                    color: white;
+                    border: none;
+                    border-radius: 7px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    height: 40px;
+                }
+
+                .dc-modal-overlay {
+                    position: fixed;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: rgba(18, 59, 58, 0.55);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 1000;
+                    padding: 16px;
+                    box-sizing: border-box;
+                }
+                .dc-modal-box {
+                    background: white;
+                    padding: 28px;
+                    border-radius: 16px;
+                    width: 100%;
+                    max-width: 450px;
+                    box-shadow: 0 20px 45px rgba(0,0,0,0.25);
+                }
+                .dc-modal-title {
+                    margin-top: 0;
+                    color: #21867a;
+                    border-bottom: 2px solid #e2edec;
+                    padding-bottom: 12px;
+                    font-size: 17px;
+                }
+                .dc-modal-info {
+                    margin: 15px 0;
+                    font-size: 14px;
+                    color: #2c4a49;
+                    background: #f9fcfb;
+                    padding: 15px;
+                    border-radius: 10px;
+                    line-height: 1.7;
+                }
+                .dc-modal-primary-btn {
+                    width: 100%;
+                    padding: 12px;
+                    margin-bottom: 10px;
+                    color: white;
+                    border: none;
+                    border-radius: 9px;
+                    cursor: pointer;
+                    font-weight: 700;
+                }
+                .dc-modal-close-btn {
+                    width: 100%;
+                    padding: 10px;
+                    margin-top: 10px;
+                    background: #eef3f2;
+                    color: #6c8a89;
+                    border: none;
+                    border-radius: 9px;
+                    cursor: pointer;
+                    font-weight: 600;
+                }
+
+                .dc-toast {
+                    position: fixed;
+                    bottom: 24px;
+                    right: 24px;
+                    background: #ffffff;
+                    border: 1.5px solid #e2edec;
+                    box-shadow: 0 15px 35px rgba(20, 90, 90, 0.18);
+                    padding: 16px 20px;
+                    border-radius: 12px;
+                    z-index: 9999;
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 12px;
+                    max-width: 350px;
+                    animation: dc-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                @keyframes dc-slide-in {
+                    from { transform: translateX(30px); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
             `}</style>
 
             {/*hasta ekranı*/}
@@ -342,17 +769,17 @@ export default function Dashboard({ user }) {
                 <div>
                     {/* hasta icin ertelemenme bildirimi */}
                     {appointments.filter(app => app.status === 'RESCHEDULED_BY_CLINIC').map(rescheduledApp => (
-                        <div key={rescheduledApp.id} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-                            <div style={{ background: 'white', padding: '30px', borderRadius: '15px', width: '90%', maxWidth: '450px', textAlign: 'center', boxShadow: '0 15px 30px rgba(0,0,0,0.3)' }}>
-                                <div style={{ fontSize: '40px', marginBottom: '10px' }}>⚠️</div>
-                                <h3 style={{ color: '#e67e22', marginTop: 0 }}>Randevu Saatiniz Değiştirildi</h3>
-                                <p style={{ color: '#34495e', fontSize: '15px', lineHeight: '1.5' }}>
+                        <div key={rescheduledApp.id} className="dc-modal-overlay">
+                            <div className="dc-modal-box" style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: '38px', marginBottom: '10px' }}>⚠️</div>
+                                <h3 style={{ color: '#c17a1f', marginTop: 0 }}>Randevu Saatiniz Değiştirildi</h3>
+                                <p style={{ color: '#3c5352', fontSize: '15px', lineHeight: '1.5' }}>
                                     Klinik tarafından <strong>Dr. {rescheduledApp.doctor?.name} {rescheduledApp.doctor?.surname}</strong> ile olan randevunuz yeni bir saate alındı.
                                 </p>
-                                <div style={{ margin: '20px 0', padding: '15px', background: '#fdf2e9', borderRadius: '8px', fontSize: '18px', fontWeight: 'bold', color: '#d35400' }}>
+                                <div style={{ margin: '20px 0', padding: '15px', background: '#fdf2e2', borderRadius: '10px', fontSize: '18px', fontWeight: 'bold', color: '#c17a1f' }}>
                                     Yeni Tarih: <br/>{new Date(rescheduledApp.appointmentDate).toLocaleString('tr-TR')}
                                 </div>
-                                <p style={{ color: '#7f8c8d', fontSize: '13px', marginBottom: '20px' }}>Bu yeni saati onaylıyor musunuz?</p>
+                                <p style={{ color: '#6c8a89', fontSize: '13px', marginBottom: '20px' }}>Bu yeni saati onaylıyor musunuz?</p>
 
                                 <div style={{ display: 'flex', gap: '10px' }}>
                                     <button
@@ -365,7 +792,7 @@ export default function Dashboard({ user }) {
                                                 alert("Bir hata oluştu.");
                                             }
                                         }}
-                                        style={{ flex: 1, padding: '12px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                                        style={{ flex: 1, padding: '12px', background: '#2a9d8f', color: 'white', border: 'none', borderRadius: '9px', cursor: 'pointer', fontWeight: 'bold' }}
                                     >
                                         Onaylıyorum
                                     </button>
@@ -379,7 +806,7 @@ export default function Dashboard({ user }) {
                                                 alert("Bir hata oluştu.");
                                             }
                                         }}
-                                        style={{ flex: 1, padding: '12px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                                        style={{ flex: 1, padding: '12px', background: '#d1665c', color: 'white', border: 'none', borderRadius: '9px', cursor: 'pointer', fontWeight: 'bold' }}
                                     >
                                         İptal Et
                                     </button>
@@ -390,18 +817,33 @@ export default function Dashboard({ user }) {
                     {/* menu buton*/}
                     {activeTab === 'menu' && (
                         <>
+                            <div className="dc-welcome-banner">
+                                <div className="dc-welcome-icon">
+                                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M12 3c-2.2 0-3.5 1.3-4.8 1.3-1.5 0-2.7-1-2.7 1.7 0 3.4 1 6.8 1.6 9.1.4 1.6.8 3.4 2 3.4 1.5 0 1.4-3.2 1.9-5 .3-1 .5-1.8 1.4-1.8s1.1.8 1.4 1.8c.5 1.8.4 5 1.9 5 1.2 0 1.6-1.8 2-3.4.6-2.3 1.6-5.7 1.6-9.1 0-2.7-1.2-1.7-2.7-1.7C15.5 4.3 14.2 3 12 3z"
+                                            fill="#ffffff"
+                                        />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 className="dc-welcome-title">Hoş Geldiniz{user?.name ? `, ${user.name}` : ''}</h2>
+                                    <p className="dc-welcome-subtitle">Diş sağlığınızla ilgili işlemlerinizi buradan kolayca yönetebilirsiniz.</p>
+                                </div>
+                            </div>
+
                             <h3 className="dc-section-title">
                                 <span className="dc-section-dot" style={{ background: '#2a9d8f' }} />
                                 Hasta İşlemleri
                             </h3>
                             <div className="dc-card-grid">
                                 <div
-                                    className="dc-card"
+                                    className="dc-card dc-card-big"
                                     style={{ background: 'linear-gradient(135deg, #2a9d8f, #21867a)' }}
                                     onClick={() => setActiveTab('new-appointment')}
                                 >
                                     <div className="dc-card-icon">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <rect x="3" y="4" width="18" height="18" rx="2" />
                                             <line x1="16" y1="2" x2="16" y2="6" />
                                             <line x1="8" y1="2" x2="8" y2="6" />
@@ -410,21 +852,63 @@ export default function Dashboard({ user }) {
                                             <line x1="10" y1="16" x2="14" y2="16" />
                                         </svg>
                                     </div>
-                                    Yeni Randevu Al
+                                    <div className="dc-card-title">Yeni Randevu Al</div>
+                                    <div className="dc-card-desc">Uygun doktor ve saati seçerek birkaç adımda randevunuzu oluşturun.</div>
+                                    <div className="dc-card-arrow">Devam Et &rarr;</div>
                                 </div>
 
                                 <div
-                                    className="dc-card"
+                                    className="dc-card dc-card-big"
                                     style={{ background: 'linear-gradient(135deg, #3fb6a8, #2a9d8f)' }}
                                     onClick={() => setActiveTab('my-appointments')}
                                 >
                                     <div className="dc-card-icon">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <circle cx="12" cy="12" r="9" />
                                             <polyline points="12 7 12 12 15 14" />
                                         </svg>
                                     </div>
-                                    Randevularım
+                                    <div className="dc-card-title">Randevularım</div>
+                                    <div className="dc-card-desc">Geçmiş ve bekleyen randevularınızın durumunu görüntüleyin.</div>
+                                    <div className="dc-card-arrow">Görüntüle &rarr;</div>
+                                </div>
+                            </div>
+
+                            <div className="dc-info-strip">
+                                <div className="dc-info-tile">
+                                    <div className="dc-info-tile-icon" style={{ background: '#e8f6f3', color: '#21867a' }}>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <circle cx="12" cy="12" r="9" />
+                                            <polyline points="12 7 12 12 15 14" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div className="dc-info-tile-title">Çalışma Saatleri</div>
+                                        <div className="dc-info-tile-text">Hafta içi 09:00 - 18:00</div>
+                                    </div>
+                                </div>
+                                <div className="dc-info-tile">
+                                    <div className="dc-info-tile-icon" style={{ background: '#fdf2e2', color: '#c17a1f' }}>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div className="dc-info-tile-title">Hatırlatmalar</div>
+                                        <div className="dc-info-tile-text">Randevu değişikliklerinden anında haberdar olun</div>
+                                    </div>
+                                </div>
+                                <div className="dc-info-tile">
+                                    <div className="dc-info-tile-icon" style={{ background: '#eef0fb', color: '#5f4483' }}>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div className="dc-info-tile-title">Uzman Kadro</div>
+                                        <div className="dc-info-tile-text">Alanında deneyimli doktorlarımızla hizmetinizdeyiz</div>
+                                    </div>
                                 </div>
                             </div>
                         </>
@@ -434,41 +918,47 @@ export default function Dashboard({ user }) {
                     {activeTab === 'my-appointments' && (
                         <div>
                             <button
+                                className="dc-back-btn"
                                 onClick={() => setActiveTab('menu')}
-                                style={{ marginBottom: '15px', padding: '8px 15px', cursor: 'pointer', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px' }}
                             >
                                 &larr; Geri Dön
                             </button>
 
-                            <h3 style={{ color: '#2980b9' }}>Geçmiş Randevularım</h3>
+                            <h3 className="dc-form-title">Geçmiş Randevularım</h3>
 
                             {appointments.length === 0 ? (
-                                <div style={{ padding: '20px', background: '#f8f9fa', borderRadius: '5px', color: '#7f8c8d' }}>
+                                <div className="dc-empty-state">
                                     Henüz alınmış bir randevunuz bulunmamaktadır.
                                 </div>
                             ) : (
                                 <ul style={{ listStyleType: 'none', padding: 0 }}>
-                                    {appointments.map(app => (
-                                        <li key={app.id} style={{ padding: '15px', border: '1px solid #e0e0e0', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#fdfdfd', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                                            <div style={{ fontSize: '16px', marginBottom: '8px' }}>
+                                    {[...appointments].sort((a, b) => {
+                                        const getWeight = (status) => (status === 'PENDING' || status === 'RESCHEDULED_BY_CLINIC') ? 1 : (status === 'APPROVED' ? 2 : 3);
+
+                                        //  Önce duruma göre sırala (Onay bekleyenler en üste)
+                                        if (getWeight(a.status) !== getWeight(b.status)) {
+                                            return getWeight(a.status) - getWeight(b.status);
+                                        }
+
+                                        //  Durumları aynıysa, en yakın tarihten en uzak tarihe (kronolojik) sırala
+                                        return new Date(a.appointmentDate) - new Date(b.appointmentDate);
+                                    }).map(app => (
+                                        <li key={app.id} className="dc-list-item">
+                                            <div style={{ fontSize: '15.5px', marginBottom: '8px' }}>
                                                 <strong>Doktor:</strong> Dr. {app.doctor?.name} {app.doctor?.surname}
                                             </div>
-                                            <div style={{ fontSize: '15px', marginBottom: '8px', color: '#555' }}>
+                                            <div style={{ fontSize: '14px', marginBottom: '8px', color: '#5b7574' }}>
                                                 <strong>Tarih:</strong> {new Date(app.appointmentDate).toLocaleString('tr-TR')}
                                             </div>
                                             <div style={{ fontSize: '14px' }}>
                                                 <strong>Durum:</strong>
-                                                <span style={{
+                                                <span className="dc-badge" style={{
                                                     marginLeft: '10px',
-                                                    padding: '4px 8px',
-                                                    borderRadius: '12px',
-                                                    color: 'white',
-                                                    backgroundColor: app.status === 'APPROVED' ? '#27ae60' : (app.status === 'REJECTED' ? '#e74c3c' : '#f39c12')
+                                                    backgroundColor: app.status === 'APPROVED' ? '#2a9d8f' : (app.status === 'REJECTED' ? '#d1665c' : '#e2a63e')
                                                 }}>
-                                {app.status === 'APPROVED' ? 'Onaylandı' : (app.status === 'REJECTED' ? 'Reddedildi / İptal' : 'Onay Bekliyor')}
-                            </span>
+                                                    {app.status === 'APPROVED' ? 'Onaylandı' : (app.status === 'REJECTED' ? 'Reddedildi / İptal' : 'Onay Bekliyor')}
+                                                </span>
                                             </div>
-
                                         </li>
                                     ))}
                                 </ul>
@@ -479,7 +969,7 @@ export default function Dashboard({ user }) {
 
                     {/*yeni randevu*/}
                     {activeTab === 'new-appointment' && (
-                        <div>
+                        <div style={{ maxWidth: '500px', margin: '0 auto', display: 'flex', flexDirection: 'column' }}>
                             <button
                                 className="dc-back-btn"
                                 onClick={() => setActiveTab('menu')}
@@ -490,9 +980,32 @@ export default function Dashboard({ user }) {
                             <h3 className="dc-form-title">Yeni Randevu Oluştur</h3>
                             <p className="dc-form-subtitle">Lütfen doktor ve uygun tarih seçin</p>
 
-                            <div className="dc-form-box">
+                            {/* adım göstergesi */}
+                            <div className="dc-steps">
+                                <div className={`dc-step ${selectedDoctor ? 'done' : 'active'}`}>
+                                    <div className="dc-step-circle">{selectedDoctor ? '✓' : '1'}</div>
+                                    <span>Doktor</span>
+                                </div>
+                                <div className={`dc-step-line ${selectedDoctor ? 'done' : ''}`} />
+                                <div className={`dc-step ${selectedDay ? 'done' : (selectedDoctor ? 'active' : '')}`}>
+                                    <div className="dc-step-circle">{selectedDay ? '✓' : '2'}</div>
+                                    <span>Tarih</span>
+                                </div>
+                                <div className={`dc-step-line ${selectedDay ? 'done' : ''}`} />
+                                <div className={`dc-step ${selectedTime ? 'done' : (selectedDay ? 'active' : '')}`}>
+                                    <div className="dc-step-circle">{selectedTime ? '✓' : '3'}</div>
+                                    <span>Saat</span>
+                                </div>
+                            </div>
+
+                            <div className="dc-form-box dc-form-box-wide">
                                 <div className="dc-form-field">
-                                    <label>Doktor Seçin</label>
+                                    <label>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a9d8f" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: '-2px' }}>
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z" />
+                                        </svg>
+                                        Doktor Seçin
+                                    </label>
                                     <select
                                         className="dc-select"
                                         value={selectedDoctor}
@@ -508,7 +1021,15 @@ export default function Dashboard({ user }) {
                                 </div>
 
                                 <div className="dc-form-field">
-                                    <label>Tarih Seçin</label>
+                                    <label>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a9d8f" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: '-2px' }}>
+                                            <rect x="3" y="4" width="18" height="18" rx="2" />
+                                            <line x1="16" y1="2" x2="16" y2="6" />
+                                            <line x1="8" y1="2" x2="8" y2="6" />
+                                            <line x1="3" y1="10" x2="21" y2="10" />
+                                        </svg>
+                                        Tarih Seçin
+                                    </label>
                                     {/* min={today} sayesinde geçmiş tarihler tıklanamaz hale gelir */}
                                     <input
                                         type="date"
@@ -522,8 +1043,21 @@ export default function Dashboard({ user }) {
                                 {/* Sadece tarih seçildikten sonra saatler görünecek */}
                                 {selectedDay && (
                                     <div className="dc-form-field">
-                                        <label>Uygun Saatler</label>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                            <label style={{ margin: 0 }}>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2a9d8f" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: '-2px' }}>
+                                                    <circle cx="12" cy="12" r="9" />
+                                                    <polyline points="12 7 12 12 15 14" />
+                                                </svg>
+                                                Uygun Saatler
+                                            </label>
+                                            <div className="dc-slot-legend">
+                                                <span><i style={{ background: '#ffffff', border: '1px solid #dce8e7' }} />Boş</span>
+                                                <span><i style={{ background: '#e8f6f3', border: '1px solid #2a9d8f' }} />Seçili</span>
+                                                <span><i style={{ background: '#f2f4f4', border: '1px solid #e2e6e5' }} />Dolu</span>
+                                            </div>
+                                        </div>
+                                        <div className="dc-slot-grid">
                                             {timeSlots.map(time => {
                                                 const isBooked = bookedSlots.includes(time); // Saat dolu mu kontrolü
 
@@ -532,25 +1066,45 @@ export default function Dashboard({ user }) {
                                                         key={time}
                                                         disabled={isBooked} // Doluysa butonu tıklanamaz yap
                                                         onClick={() => setSelectedTime(time)}
+                                                        className="dc-slot-btn"
                                                         style={{
-                                                            padding: '10px',
-                                                            borderRadius: '8px',
-                                                            border: selectedTime === time ? '2px solid #27ae60' : '1px solid #dce8e7',
+                                                            border: selectedTime === time ? '2px solid #2a9d8f' : '1px solid #dce8e7',
 
                                                             // Doluysa gri, seçiliyse yeşil, boşsa beyaz:
-                                                            backgroundColor: isBooked ? '#f2f4f4' : (selectedTime === time ? '#e8f8f5' : '#ffffff'),
-                                                            color: isBooked ? '#bdc3c7' : (selectedTime === time ? '#27ae60' : '#2c3e50'),
+                                                            backgroundColor: isBooked ? '#f2f4f4' : (selectedTime === time ? '#e8f6f3' : '#ffffff'),
+                                                            color: isBooked ? '#bcc9c8' : (selectedTime === time ? '#21867a' : '#2c4a49'),
 
                                                             fontWeight: selectedTime === time ? 'bold' : 'normal',
                                                             cursor: isBooked ? 'not-allowed' : 'pointer', // Doluysa imleç yasak işareti olur
                                                             textDecoration: isBooked ? 'line-through' : 'none', // Doluysa üstünü çiz
-                                                            transition: 'all 0.2s'
                                                         }}
                                                     >
                                                         {time}
                                                     </button>
                                                 );
                                             })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* seçim özeti */}
+                                {(selectedDoctor || selectedDay || selectedTime) && (
+                                    <div className="dc-summary-box">
+                                        <div className="dc-summary-title">Randevu Özeti</div>
+                                        <div className="dc-summary-row">
+                                            <span>Doktor</span>
+                                            <strong>{selectedDoctor ? (() => {
+                                                const d = doctors.find(doc => String(doc.id) === String(selectedDoctor));
+                                                return d ? `Dr. ${d.name} ${d.surname}` : '—';
+                                            })() : '—'}</strong>
+                                        </div>
+                                        <div className="dc-summary-row">
+                                            <span>Tarih</span>
+                                            <strong>{selectedDay || '—'}</strong>
+                                        </div>
+                                        <div className="dc-summary-row">
+                                            <span>Saat</span>
+                                            <strong>{selectedTime || '—'}</strong>
                                         </div>
                                     </div>
                                 )}
@@ -570,63 +1124,25 @@ export default function Dashboard({ user }) {
             {/*doktor ekranı*/}
             {user.role === 'ROLE_DOCTOR' && (
                 <div>
-                    {/*doktor-anaekran */}
-                    {activeTab === 'menu' && (
-                        <>
-                            <h3 className="dc-section-title">
-                                <span className="dc-section-dot" style={{ background: '#27ae60' }} />
-                                Doktor İşlemleri
-                            </h3>
-                            <div className="dc-card-grid">
-                                <div
-                                    className="dc-card"
-                                    style={{ background: 'linear-gradient(135deg, #27ae60, #1e8449)' }}
-                                    onClick={() => setActiveTab('doctor-calendar')}
-                                >
-                                    <div className="dc-card-icon">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <rect x="3" y="4" width="18" height="18" rx="2" />
-                                            <line x1="16" y1="2" x2="16" y2="6" />
-                                            <line x1="8" y1="2" x2="8" y2="6" />
-                                            <line x1="3" y1="10" x2="21" y2="10" />
-                                        </svg>
-                                    </div>
-                                    Randevularım (Takvim)
-                                </div>
-                                <div
-                                    className="dc-card"
-                                    style={{ background: 'linear-gradient(135deg, #52c47f, #27ae60)' }}
+                    {/* doktor takvim */}
+                    {activeTab === 'doctor-calendar' && (
+                        <div style={{ marginTop: '20px' }}>
+                            <div className="dc-panel-header">
+                                <h3 style={{ color: '#123b3a' }}>Randevu Takvimim</h3>
+                                <button
                                     onClick={() => {
                                         setActiveTab('patient-history');
                                         setSearchTerm('');
                                         setSelectedPatient(null);
                                     }}
+                                    className="dc-action-btn"
+                                    style={{ background: 'linear-gradient(135deg, #2a9d8f, #21867a)' }}
                                 >
-                                    <div className="dc-card-icon">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                                        </svg>
-                                    </div>
                                     Hasta Geçmişi İncele
-                                </div>
-
+                                </button>
                             </div>
-                        </>
-                    )}
 
-                    {/* doktor takvim */}
-                    {activeTab === 'doctor-calendar' && (
-                        <div style={{ marginTop: '20px' }}>
-                            <button
-                                onClick={() => setActiveTab('menu')}
-                                style={{ marginBottom: '15px', padding: '8px 15px', cursor: 'pointer', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px' }}
-                            >
-                                &larr; Geri Dön
-                            </button>
-                            <h3 style={{ color: '#27ae60', marginBottom: '20px' }}>Randevu Takvimim</h3>
-
-                            <div style={{ height: '550px', backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                            <div className="dc-panel" style={{ height: '550px' }}>
                                 <Calendar
                                     localizer={localizer}
                                     events={appointments.map(app => ({
@@ -640,218 +1156,30 @@ export default function Dashboard({ user }) {
                                     startAccessor="start"
                                     endAccessor="end"
                                     tooltipAccessor="tooltipDetails"
-
                                     eventPropGetter={(event) => {
-                                        return {
-                                            style: {
-                                                backgroundColor: '#b3d4e6',
-                                                border: 'none',
-                                                borderRadius: '6px',
-                                                color: '#1a3644',
-                                                display: 'block',
-                                                padding: '0',
-                                                boxShadow: 'none'
-                                            }
-                                        };
+                                        return { style: { backgroundColor: '#bfe0db', border: 'none', borderRadius: '6px', color: '#123b3a', display: 'block', padding: '0', boxShadow: 'none' } };
                                     }}
-
-                                    // sadece hasta adı ve note
                                     components={{
                                         event: ({ event }) => (
                                             <div style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                <div style={{
-                                                    fontSize: '13px',
-                                                    fontWeight: 'bold',
-                                                    whiteSpace: 'nowrap',
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis'
-                                                }}>
-                                                    {event.title}
+                                                <div style={{ fontSize: '13px', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    Hasta : {event.title}
                                                 </div>
-
-                                                {/* Sadece not varsa ekranda görünür */}
                                                 {event.originalData.note && (
-                                                    <div style={{
-                                                        fontSize: '12px',
-                                                        fontStyle: 'italic',
-                                                        whiteSpace: 'nowrap',
-                                                        overflow: 'hidden',
-                                                        textOverflow: 'ellipsis',
-                                                        opacity: 0.85
-                                                    }}>
-                                                        {event.originalData.note}
-                                                    </div>
+                                                    <div style={{ fontSize: '12px', fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.85 }}>{event.originalData.note}</div>
                                                 )}
                                             </div>
                                         )
                                     }}
-
                                     onSelectEvent={(event) => {
                                         const app = event.originalData;
                                         setEditingAppId(app.id);
                                         setEditDuration(app.duration || 30);
                                         setEditNote(app.note || '');
-
-                                        // var olan randevu tarihini ve saatini parçalayıp state'e atıyoruz
-                                        const appDateObj = new Date(app.appointmentDate);
-                                        const yyyy = appDateObj.getFullYear();
-                                        const mm = String(appDateObj.getMonth() + 1).padStart(2, '0');
-                                        const dd = String(appDateObj.getDate()).padStart(2, '0');
-                                        const hh = String(appDateObj.getHours()).padStart(2, '0');
-                                        const min = String(appDateObj.getMinutes()).padStart(2, '0');
-
-                                        setEditDate(`${yyyy}-${mm}-${dd}`);
-                                        setEditTime(`${hh}:${min}`);
-
                                         setSelectedEventModal(app);
                                     }}
-
-                                    messages={{
-                                        next: "İleri",
-                                        previous: "Geri",
-                                        today: "Bugün",
-                                        month: "Ay",
-                                        week: "Hafta",
-                                        day: "Gün",
-                                        agenda: "Ajanda",
-                                        noEventsInRange: "Bu aralıkta randevu bulunmamaktadır."
-                                    }}
+                                    messages={{ next: "»", previous: "«", today: "Bugün", month: "Ay", week: "Hafta", day: "Gün", agenda: "Ajanda", noEventsInRange: "Bu aralıkta randevu bulunmamaktadır." }}
                                 />
-                                {/* randevu detayı*/}
-                                {/* SEKRETER ONAY MODALI (POP-UP) */}
-                                {selectedEventModal && activeTab === 'secretary-master-calendar' && (
-                                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                                        <div style={{ background: 'white', padding: '30px', borderRadius: '15px', width: '90%', maxWidth: '450px', boxShadow: '0 15px 30px rgba(0,0,0,0.2)' }}>
-                                            <h3 style={{ color: '#8e44ad', marginTop: 0, borderBottom: '2px solid #e2edec', paddingBottom: '10px' }}>⚙️ Randevu Yönetimi</h3>
-
-                                            <div style={{ margin: '15px 0', fontSize: '14px', color: '#2c3e50', background: '#f9fcfb', padding: '15px', borderRadius: '8px' }}>
-                                                <div><strong>Doktor:</strong> Dr. {selectedEventModal.doctor?.name} {selectedEventModal.doctor?.surname}</div>
-                                                <div><strong>Hasta:</strong> {selectedEventModal.patient?.name} {selectedEventModal.patient?.surname}</div>
-                                                <div><strong>Mevcut Tarih:</strong> {new Date(selectedEventModal.appointmentDate).toLocaleString('tr-TR')}</div>
-                                                <div style={{ marginTop: '10px' }}>
-                                                    <strong>Durum: </strong>
-                                                    <span style={{ padding: '3px 8px', borderRadius: '8px', color: 'white', backgroundColor: selectedEventModal.status === 'APPROVED' ? '#27ae60' : (selectedEventModal.status === 'REJECTED' ? '#e74c3c' : (selectedEventModal.status === 'RESCHEDULED_BY_CLINIC' ? '#3498db' : '#f39c12')) }}>
-                        {selectedEventModal.status === 'APPROVED' ? 'Onaylı' : (selectedEventModal.status === 'REJECTED' ? 'İptal' : (selectedEventModal.status === 'RESCHEDULED_BY_CLINIC' ? 'Hastadan Onay Bekliyor' : 'Onay Bekliyor'))}
-                    </span>
-                                                </div>
-                                            </div>
-
-                                            {/* tarih-saat */}
-                                            <div style={{ marginBottom: '15px' }}>
-                                                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Yeni Tarih Seçin:</label>
-                                                <input
-                                                    type="date"
-                                                    min={today}
-                                                    value={editDate}
-                                                    onChange={(e) => {
-                                                        setEditDate(e.target.value);
-                                                        setEditTime(''); // Tarih değiştiğinde saati sıfırla
-                                                    }}
-                                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', marginBottom: '10px' }}
-                                                />
-
-                                                {/* Sadece tarih seçildiğinde saat kutucukları göster */}
-                                                {editDate && (
-                                                    <div style={{ marginTop: '10px' }}>
-                                                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Uygun Saatler:</label>
-                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', maxHeight: '120px', overflowY: 'auto', padding: '5px 0' }}>
-                                                            {timeSlots.map(time => (
-                                                                <button
-                                                                    key={time}
-                                                                    onClick={() => setEditTime(time)}
-                                                                    style={{
-                                                                        padding: '8px 5px',
-                                                                        borderRadius: '6px',
-                                                                        border: editTime === time ? '2px solid #f39c12' : '1px solid #dce8e7',
-                                                                        backgroundColor: editTime === time ? '#fdf2e9' : '#ffffff',
-                                                                        color: editTime === time ? '#d35400' : '#2c3e50',
-                                                                        fontWeight: editTime === time ? 'bold' : 'normal',
-                                                                        cursor: 'pointer',
-                                                                        fontSize: '13px',
-                                                                        transition: 'all 0.2s'
-                                                                    }}
-                                                                >
-                                                                    {time}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                                                <div style={{ flex: 1 }}>
-                                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Süre (Dakika):</label>
-                                                    <input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
-                                                </div>
-                                            </div>
-
-                                            <div style={{ marginBottom: '20px' }}>
-                                                <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Doktora İletilecek Not:</label>
-                                                <textarea value={editNote} onChange={(e) => setEditNote(e.target.value)} rows="2" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} placeholder="Örn: 20lik diş çekimi..."></textarea>
-                                            </div>
-
-                                            {/*erteleme buton */}
-                                            <button
-                                                onClick={async () => {
-                                                    if (!editDate || !editTime) {
-                                                        alert("Lütfen yeni bir tarih ve saat seçin!");
-                                                        return;
-                                                    }
-                                                    try {
-                                                        const newDateTime = `${editDate}T${editTime}:00`;
-                                                        await updateAppointment(selectedEventModal.id, {
-                                                            status: 'RESCHEDULED_BY_CLINIC',
-                                                            appointmentDate: newDateTime,
-                                                            note: editNote,
-                                                            duration: Number(editDuration)
-                                                        });
-
-                                                        setAppointments(appointments.map(a => a.id === selectedEventModal.id ? { ...a, status: 'RESCHEDULED_BY_CLINIC', appointmentDate: newDateTime, note: editNote, duration: Number(editDuration) } : a));
-                                                        setSelectedEventModal(null);
-                                                        alert("Randevu ertelendi, hastadan onay bekleniyor.");
-                                                    } catch (error) { alert("Erteleme başarısız!"); }
-                                                }}
-                                                style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#f39c12', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-                                            >
-                                                Tarihi Değiştir ve Hastaya Onaya Gönder
-                                            </button>
-
-                                            <div style={{ display: 'flex', gap: '10px' }}>
-                                                <button
-                                                    onClick={async () => {
-                                                        try {
-                                                            await updateAppointment(selectedEventModal.id, { status: 'APPROVED', note: editNote, duration: Number(editDuration) });
-                                                            setAppointments(appointments.map(a => a.id === selectedEventModal.id ? { ...a, status: 'APPROVED', note: editNote, duration: Number(editDuration) } : a));
-                                                            setSelectedEventModal(null);
-                                                        } catch (error) { alert("Güncelleme başarısız!"); }
-                                                    }}
-                                                    style={{ flex: 1, padding: '10px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-                                                >
-                                                    Onayla
-                                                </button>
-                                                <button
-                                                    onClick={async () => {
-                                                        try {
-                                                            await updateAppointment(selectedEventModal.id, { status: 'REJECTED' });
-                                                            setAppointments(appointments.map(a => a.id === selectedEventModal.id ? { ...a, status: 'REJECTED' } : a));
-                                                            setSelectedEventModal(null);
-                                                        } catch (error) { alert("İptal başarısız!"); }
-                                                    }}
-                                                    style={{ flex: 1, padding: '10px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
-                                                >
-                                                    İptal Et
-                                                </button>
-                                            </div>
-                                            <button
-                                                onClick={() => setSelectedEventModal(null)}
-                                                style={{ width: '100%', padding: '10px', marginTop: '10px', background: '#ecf0f1', color: '#7f8c8d', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-                                            >
-                                                Kapat
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     )}
@@ -860,22 +1188,23 @@ export default function Dashboard({ user }) {
                     {activeTab === 'patient-history' && (
                         <div style={{ marginTop: '20px' }}>
                             <button
-                                onClick={() => setActiveTab('menu')}
-                                style={{ marginBottom: '15px', padding: '8px 15px', cursor: 'pointer', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px' }}
+                                className="dc-back-btn"
+                                onClick={() => setActiveTab('doctor-calendar')}
                             >
-                                &larr; Geri Dön
+                                &larr; Takvime Dön
                             </button>
-                            <h3 style={{ color: '#27ae60', marginBottom: '20px' }}>Hasta Geçmişi İnceleme</h3>
+                            <h3 className="dc-form-title" style={{ marginBottom: '20px' }}>Hasta Geçmişi İnceleme</h3>
 
                             {/* arama ekranı */}
                             {!selectedPatient ? (
-                                <div style={{ background: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                                <div className="dc-panel">
                                     <input
                                         type="text"
                                         placeholder="🔍 Hasta adı veya soyadı ile ara..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #dce8e7', marginBottom: '20px', fontSize: '15px' }}
+                                        className="dc-search-input"
+                                        style={{ marginBottom: '20px' }}
                                     />
 
                                     <div style={{ display: 'grid', gap: '10px' }}>
@@ -885,81 +1214,84 @@ export default function Dashboard({ user }) {
                                                 <div
                                                     key={patient.id}
                                                     onClick={() => setSelectedPatient(patient)}
-                                                    style={{ padding: '15px', background: '#f8f9fa', border: '1px solid #e2edec', borderRadius: '8px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                                    className="dc-patient-row"
                                                 >
-                                                    <strong>👤 {patient.name} {patient.surname}</strong>
-                                                    <span style={{ color: '#27ae60', fontSize: '13px', fontWeight: 'bold' }}>Geçmişi Gör &rarr;</span>
+                                                    <strong>{patient.name} {patient.surname}</strong>
+                                                    <span style={{ color: '#21867a', fontSize: '13px', fontWeight: 'bold' }}>Geçmişi Gör &rarr;</span>
                                                 </div>
                                             ))}
                                     </div>
                                 </div>
                             ) : (
                                 /* hasta seçildiyse geçmişi göster */
-                                <div style={{ background: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                                <div className="dc-panel">
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #e2edec', paddingBottom: '10px' }}>
-                                        <h4 style={{ color: '#2c3e50', margin: 0 }}>👤 {selectedPatient.name} {selectedPatient.surname} - Tedavi Geçmişi</h4>
+                                        <h4 style={{ color: '#123b3a', margin: 0 }}>{selectedPatient.name} {selectedPatient.surname} - Tedavi Geçmişi</h4>
                                         <button
                                             onClick={() => setSelectedPatient(null)}
-                                            style={{ padding: '6px 12px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '12px' }}
+                                            style={{ padding: '7px 14px', background: '#d1665c', color: 'white', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '12px', fontWeight: 600 }}
                                         >
                                             Başka Hasta Ara
                                         </button>
                                     </div>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                        {appointments.filter(app => app.patient && app.patient.id === selectedPatient.id).map(app => (
-                                            <div key={app.id} style={{ padding: '15px', borderLeft: '4px solid #27ae60', background: '#f9fcfb', borderRadius: '0 8px 8px 0' }}>
-                                                <div style={{ marginBottom: '8px', color: '#555', fontSize: '13px' }}>
-                                                    <strong>Tarih:</strong> {new Date(app.appointmentDate).toLocaleString('tr-TR')}
-                                                </div>
-                                                <div style={{ fontSize: '15px', color: '#333' }}>
-                                                    <strong>Uygulanan İşlem / Not:</strong> {app.note || 'Not girilmemiş.'}
-                                                </div>
+                                        {appointments
+                                            .filter(app => app.patient && app.patient.id === selectedPatient.id)
+                                            .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
+                                            .map(app => (
+                                                <div key={app.id} className="dc-history-entry">
+                                                    <div style={{ marginBottom: '8px', color: '#5b7574', fontSize: '13px' }}>
+                                                        <strong>Tarih:</strong> {new Date(app.appointmentDate).toLocaleString('tr-TR')}
+                                                    </div>
+                                                    <div style={{ fontSize: '15px', color: '#123b3a' }}>
+                                                        <strong>Uygulanan İşlem / Not:</strong> {app.note || 'Not girilmemiş.'}
+                                                    </div>
 
-                                                {/* not güncelleme butonu */}
-                                                {editingAppId === app.id ? (
-                                                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                                                        <input
-                                                            type="text"
-                                                            value={editNote}
-                                                            onChange={(e) => setEditNote(e.target.value)}
-                                                            placeholder="Tedavi detayını yazın..."
-                                                            style={{ flex: 1, padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }}
-                                                        />
+                                                    {/* not güncelleme butonu */}
+                                                    {editingAppId === app.id ? (
+                                                        <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                                                            <input
+                                                                type="text"
+                                                                value={editNote}
+                                                                onChange={(e) => setEditNote(e.target.value)}
+                                                                placeholder="Tedavi detayını yazın..."
+                                                                style={{ flex: 1, padding: '9px', borderRadius: '7px', border: '1.5px solid #dce8e7' }}
+                                                            />
+                                                            <button
+                                                                style={{ padding: '9px 16px', background: '#2a9d8f', color: 'white', border: 'none', borderRadius: '7px', cursor: 'pointer', fontWeight: 600 }}
+                                                                onClick={async () => {
+                                                                    try {
+                                                                        await updateAppointment(app.id, { note: editNote });
+                                                                        setAppointments(appointments.map(a => a.id === app.id ? { ...a, note: editNote } : a));
+                                                                        setEditingAppId(null);
+                                                                    } catch (error) {
+                                                                        alert("Not güncellenemedi!");
+                                                                    }
+                                                                }}
+                                                            >
+                                                                Kaydet
+                                                            </button>
+                                                            <button
+                                                                style={{ padding: '9px 16px', background: '#9db3b2', color: 'white', border: 'none', borderRadius: '7px', cursor: 'pointer', fontWeight: 600 }}
+                                                                onClick={() => setEditingAppId(null)}
+                                                            >
+                                                                İptal
+                                                            </button>
+                                                        </div>
+                                                    ) : (
                                                         <button
-                                                            style={{ padding: '8px 15px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-                                                            onClick={async () => {
-                                                                try {
-                                                                    await updateAppointment(app.id, { note: editNote });
-                                                                    setAppointments(appointments.map(a => a.id === app.id ? { ...a, note: editNote } : a));
-                                                                    setEditingAppId(null);
-                                                                } catch (error) {
-                                                                    alert("Not güncellenemedi!");
-                                                                }
+                                                            style={{ marginTop: '10px', padding: '7px 14px', background: '#21867a', color: 'white', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                                                            onClick={() => {
+                                                                setEditingAppId(app.id);
+                                                                setEditNote(app.note || '');
                                                             }}
                                                         >
-                                                            Kaydet
+                                                            Notu Güncelle
                                                         </button>
-                                                        <button
-                                                            style={{ padding: '8px 15px', background: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-                                                            onClick={() => setEditingAppId(null)}
-                                                        >
-                                                            İptal
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <button
-                                                        style={{ marginTop: '10px', padding: '6px 12px', background: '#2980b9', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '13px' }}
-                                                        onClick={() => {
-                                                            setEditingAppId(app.id);
-                                                            setEditNote(app.note || '');
-                                                        }}
-                                                    >
-                                                        Notu Güncelle
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
+                                                    )}
+                                                </div>
+                                            ))}
                                     </div>
                                 </div>
                             )}
@@ -971,182 +1303,39 @@ export default function Dashboard({ user }) {
             {/* sekreter/admin ekranı*/}
             {user.role === 'ROLE_SECRETARY' && (
                 <div>
-                    {/*Sekreter menu*/}
-                    {activeTab === 'menu' && (
-                        <>
-                            <h3 className="dc-section-title">
-                                <span className="dc-section-dot" style={{ background: '#8e44ad' }} />
-                                Sekreter / Klinik Yönetimi
-                            </h3>
-                            <div className="dc-card-grid">
-                                <div
-                                    className="dc-card"
-                                    style={{ background: 'linear-gradient(135deg, #8e44ad, #6c3483)' }}
-                                    onClick={() => setActiveTab('secretary-appointments')}
-                                >
-                                    <div className="dc-card-icon">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <rect x="3" y="4" width="18" height="18" rx="2" />
-                                            <line x1="16" y1="2" x2="16" y2="6" />
-                                            <line x1="8" y1="2" x2="8" y2="6" />
-                                            <line x1="3" y1="10" x2="21" y2="10" />
-                                        </svg>
-                                    </div>
-                                    Liste Görünümü (Tüm Randevular)
-                                </div>
-                                <div
-                                    className="dc-card"
-                                    style={{ background: 'linear-gradient(135deg, #a569bd, #8e44ad)' }}
-                                    onClick={() => setActiveTab('secretary-master-calendar')}
-                                >
-                                    <div className="dc-card-icon">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M4 6h16" />
-                                            <path d="M4 12h16" />
-                                            <path d="M4 18h10" />
-                                        </svg>
-                                    </div>
-                                    Klinik Takvimi
-                                </div>
-                            </div>
-                        </>
-                    )}
-
-                    {/* liste görünüm */}
-                    {activeTab === 'secretary-appointments' && (
-                        <div>
-                            <button
-                                onClick={() => {
-                                    setActiveTab('menu');
-                                    setFilterPatient(''); // Menüye dönerken aramaları temizlesin
-                                    setFilterDoctor('');
-                                    setFilterDate('');
-                                    setFilterNote('');
-                                }}
-                                style={{ marginBottom: '15px', padding: '8px 15px', cursor: 'pointer', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px' }}
-                            >
-                                &larr; Geri Dön
-                            </button>
-
-                            <h3 style={{ color: '#8e44ad', marginBottom: '15px' }}>Klinik Randevu Listesi</h3>
-
-                            {/* arama çubuğu */}
-                            <div style={{ background: '#f4f6f6', padding: '15px', borderRadius: '10px', marginBottom: '20px', border: '1px solid #dce8e7', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                                <div style={{ flex: '1', minWidth: '150px' }}>
-                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#2c3e50', marginBottom: '5px' }}>Hasta Adı</label>
-                                    <input type="text" placeholder="Hasta ara..." value={filterPatient} onChange={e => setFilterPatient(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #bdc3c7' }} />
-                                </div>
-                                <div style={{ flex: '1', minWidth: '150px' }}>
-                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#2c3e50', marginBottom: '5px' }}>Doktor Adı</label>
-                                    <input type="text" placeholder="Doktor ara..." value={filterDoctor} onChange={e => setFilterDoctor(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #bdc3c7' }} />
-                                </div>
-                                <div style={{ flex: '1', minWidth: '150px' }}>
-                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#2c3e50', marginBottom: '5px' }}>Tarih</label>
-                                    <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #bdc3c7' }} />
-                                </div>
-                                <div style={{ flex: '1', minWidth: '150px' }}>
-                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#2c3e50', marginBottom: '5px' }}>Açıklama</label>
-                                    <input type="text" placeholder="Açıklama ara..." value={filterNote} onChange={e => setFilterNote(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #bdc3c7' }} />
-                                </div>
-                                <button
-                                    onClick={() => { setFilterPatient(''); setFilterDoctor(''); setFilterDate(''); setFilterNote(''); }}
-                                    style={{ padding: '10px 15px', backgroundColor: '#7f8c8d', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', height: '39px' }}
-                                >
-                                    Temizle
-                                </button>
-                            </div>
-
-                            {/* filterlenmiş randevular */}
-                            {(() => {
-                                //arama kutusuna göre filreleme
-                                const filteredApps = appointments.filter(app => {
-                                    const matchPatient = !filterPatient || `${app.patient?.name} ${app.patient?.surname}`.toLowerCase().includes(filterPatient.toLowerCase());
-                                    const matchDoctor = !filterDoctor || `${app.doctor?.name} ${app.doctor?.surname}`.toLowerCase().includes(filterDoctor.toLowerCase());
-                                    const matchNote = !filterNote || (app.note && app.note.toLowerCase().includes(filterNote.toLowerCase()));
-                                    //tarih formatlama
-                                    const appDateObj = new Date(app.appointmentDate);
-                                    const yyyy = appDateObj.getFullYear();
-                                    const mm = String(appDateObj.getMonth() + 1).padStart(2, '0');
-                                    const dd = String(appDateObj.getDate()).padStart(2, '0');
-                                    const appDateStr = `${yyyy}-${mm}-${dd}`;
-
-                                    const matchDate = !filterDate || appDateStr === filterDate;
-
-
-                                    return matchPatient && matchDoctor && matchDate && matchNote;
-                                });
-
-                                if (appointments.length === 0) {
-                                    return <div style={{ padding: '20px', background: '#f8f9fa', borderRadius: '5px', color: '#7f8c8d' }}>Sistemde kayıtlı randevu bulunmamaktadır.</div>;
-                                }
-
-                                if (filteredApps.length === 0) {
-                                    return <div style={{ padding: '20px', background: '#fdf2e9', borderRadius: '5px', color: '#e67e22', border: '1px dashed #e67e22' }}>⚠️ Arama kriterlerinize uygun randevu bulunamadı.</div>;
-                                }
-
-                                return (
-                                    <ul style={{ listStyleType: 'none', padding: 0 }}>
-                                        {filteredApps.map(app => (
-                                            <li key={app.id} style={{ padding: '15px', border: '1px solid #e0e0e0', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#fdfdfd' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                    <div>
-                                                        <div style={{ fontSize: '16px', marginBottom: '8px' }}>
-                                                            <strong>Hasta:</strong> {app.patient?.name} {app.patient?.surname} <br/>
-                                                            <strong>Doktor:</strong> Dr. {app.doctor?.name} {app.doctor?.surname}
-                                                        </div>
-                                                        <div style={{ fontSize: '14px', marginBottom: '8px', color: '#555' }}>
-                                                            <strong>Tarih:</strong> {new Date(app.appointmentDate).toLocaleString('tr-TR')}
-                                                            {app.duration && <span style={{ marginLeft: '10px' }}>{app.duration} Dk</span>}
-                                                        </div>
-                                                        <div style={{ fontSize: '14px', color: '#2c3e50', fontStyle: 'italic', marginBottom: '10px' }}>
-                                                            {app.note && `Not: ${app.note}`}
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                    <span style={{ padding: '6px 10px', borderRadius: '12px', color: 'white', fontSize: '13px', backgroundColor: app.status === 'APPROVED' ? '#27ae60' : (app.status === 'REJECTED' ? '#e74c3c' : (app.status === 'RESCHEDULED_BY_CLINIC' ? '#3498db' : '#f39c12')) }}>
-                                        {app.status === 'APPROVED' ? 'Onaylandı' : (app.status === 'REJECTED' ? 'Reddedildi' : (app.status === 'RESCHEDULED_BY_CLINIC' ? 'Hastadan Onay Bekliyor' : 'Onay Bekliyor'))}
-                                    </span>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                );
-                            })()}
-                        </div>
-                    )}
-
-                    {/*klinik takvim*/}
+                    {/*klinik takvim (ANA EKRAN) */}
                     {activeTab === 'secretary-master-calendar' && (
                         <div style={{ marginTop: '20px' }}>
-                            <button
-                                onClick={() => setActiveTab('menu')}
-                                style={{ marginBottom: '15px', padding: '8px 15px', cursor: 'pointer', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px' }}
-                            >
-                                &larr; Geri Dön
-                            </button>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                <h3 style={{ color: '#8e44ad', margin: 0 }}>Genel Klinik Takvimi</h3>
-                                <div style={{ display: 'flex', gap: '15px', fontSize: '13px', fontWeight: 'bold' }}>
-                                    <span style={{ color: '#f39c12' }}>Sizden Onay Bekleyenler</span>
-                                    <span style={{ color: '#27ae60' }}>Onaylananlar</span>
-                                    <span style ={{color: '#3498db'}}>Hastadan Onay Bekleyenler</span>
+                            <div className="dc-panel-header">
+                                <h3 style={{ color: '#123b3a' }}>Genel Klinik Takvimi</h3>
+                                <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <div style={{ display: 'flex', gap: '15px', fontSize: '12.5px', fontWeight: 700 }}>
+                                        <span style={{ color: '#c17a1f' }}>● Sizden Onay Bekleyenler</span>
+                                        <span style={{ color: '#2a9d8f' }}>● Onaylananlar</span>
+                                        <span style={{ color: '#4a90c4' }}>● Hastadan Onay Bekleyenler</span>
+                                    </div>
+                                    <button
+                                        onClick={() => setActiveTab('secretary-appointments')}
+                                        className="dc-action-btn"
+                                        style={{ background: 'linear-gradient(135deg, #7c5ba6, #5f4483)' }}
+                                    >
+                                        Hastaların Listesi
+                                    </button>
                                 </div>
                             </div>
 
-                            <div style={{ height: '600px', backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+                            <div className="dc-panel" style={{ height: '600px' }}>
                                 <Calendar
                                     localizer={localizer}
                                     events={appointments
                                         .filter(app => app.status !== 'REJECTED')
                                         .map(app => ({
-                                        id: app.id,
-                                        title: `Dr. ${app.doctor?.name} | H: ${app.patient?.name}`,
-                                        start: new Date(app.appointmentDate),
-                                        end: new Date(new Date(app.appointmentDate).getTime() + (app.duration || 30) * 60000),
-                                        originalData: app
-                                    }))}
+                                            id: app.id,
+                                            title: `Dr. ${app.doctor?.name} | H: ${app.patient?.name}`,
+                                            start: new Date(app.appointmentDate),
+                                            end: new Date(new Date(app.appointmentDate).getTime() + (app.duration || 30) * 60000),
+                                            originalData: app
+                                        }))}
                                     startAccessor="start"
                                     endAccessor="end"
                                     eventPropGetter={eventStyleGetter}
@@ -1157,25 +1346,163 @@ export default function Dashboard({ user }) {
                                         setEditNote(app.note || '');
                                         setSelectedEventModal(app);
                                     }}
-                                    messages={{ next: "İleri", previous: "Geri", today: "Bugün", month: "Ay", week: "Hafta", day: "Gün" }}
+                                    messages={{ next: "»", previous: "«", today: "Bugün", month: "Ay", week: "Hafta", day: "Gün" }}
                                 />
                             </div>
                         </div>
                     )}
 
-                    {/* SEKRETER ONAY MODALI (POP-UP) */}
-                    {selectedEventModal && activeTab === 'secretary-master-calendar' && (
-                        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-                            <div style={{ background: 'white', padding: '30px', borderRadius: '15px', width: '90%', maxWidth: '450px', boxShadow: '0 15px 30px rgba(0,0,0,0.2)' }}>
-                                <h3 style={{ color: '#8e44ad', marginTop: 0, borderBottom: '2px solid #e2edec', paddingBottom: '10px' }}>⚙️ Randevu Yönetimi</h3>
+                    {/* liste görünüm */}
+                    {activeTab === 'secretary-appointments' && (
+                        <div>
+                            <button
+                                className="dc-back-btn"
+                                onClick={() => {
+                                    setActiveTab('secretary-master-calendar');
+                                    setFilterPatient('');
+                                    setFilterDoctor('');
+                                    setFilterDate('');
+                                    setFilterNote('');
+                                }}
+                            >
+                                &larr; Takvime Dön
+                            </button>
 
-                                <div style={{ margin: '15px 0', fontSize: '14px', color: '#2c3e50', background: '#f9fcfb', padding: '15px', borderRadius: '8px' }}>
+                            <h3 className="dc-form-title" style={{ marginBottom: '15px' }}>Klinik Randevu Listesi</h3>
+
+                            {/* arama çubuğu */}
+                            <div className="dc-filter-bar">
+                                <div className="dc-filter-field">
+                                    <label>Hasta Adı</label>
+                                    <input type="text" placeholder="Hasta ara..." value={filterPatient} onChange={e => setFilterPatient(e.target.value)} />
+                                </div>
+                                <div className="dc-filter-field">
+                                    <label>Doktor Adı</label>
+                                    <input type="text" placeholder="Doktor ara..." value={filterDoctor} onChange={e => setFilterDoctor(e.target.value)} />
+                                </div>
+                                <div className="dc-filter-field">
+                                    <label>Tarih</label>
+                                    <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
+                                </div>
+                                <div className="dc-filter-field">
+                                    <label>Açıklama</label>
+                                    <input type="text" placeholder="Açıklama ara..." value={filterNote} onChange={e => setFilterNote(e.target.value)} />
+                                </div>
+                                <button
+                                    onClick={() => { setFilterPatient(''); setFilterDoctor(''); setFilterDate(''); setFilterNote(''); }}
+                                    className="dc-filter-clear"
+                                >
+                                    Temizle
+                                </button>
+                            </div>
+
+                            {/* filterlenmiş randevular */}
+                            {(() => {
+                                // Arama kutusuna göre filtreleme VE sıralama işlemi
+                                const filteredApps = appointments.filter(app => {
+                                    const matchPatient = !filterPatient || `${app.patient?.name} ${app.patient?.surname}`.toLowerCase().includes(filterPatient.toLowerCase());
+                                    const matchDoctor = !filterDoctor || `${app.doctor?.name} ${app.doctor?.surname}`.toLowerCase().includes(filterDoctor.toLowerCase());
+                                    const matchNote = !filterNote || (app.note && app.note.toLowerCase().includes(filterNote.toLowerCase()));
+
+                                    const appDateObj = new Date(app.appointmentDate);
+                                    const yyyy = appDateObj.getFullYear();
+                                    const mm = String(appDateObj.getMonth() + 1).padStart(2, '0');
+                                    const dd = String(appDateObj.getDate()).padStart(2, '0');
+                                    const appDateStr = `${yyyy}-${mm}-${dd}`;
+
+                                    const matchDate = !filterDate || appDateStr === filterDate;
+                                    return matchPatient && matchDoctor && matchDate && matchNote;
+                                }).sort((a, b) => {
+                                    const getWeight = (status) => (status === 'PENDING' || status === 'RESCHEDULED_BY_CLINIC') ? 1 : (status === 'APPROVED' ? 2 : 3);
+
+                                    //  Önce duruma göre sırala (Onay bekleyenler en üste)
+                                    if (getWeight(a.status) !== getWeight(b.status)) {
+                                        return getWeight(a.status) - getWeight(b.status);
+                                    }
+
+                                    //  Durumları aynıysa, en yakın tarihten en uzak tarihe (kronolojik) sırala
+                                    return new Date(a.appointmentDate) - new Date(b.appointmentDate);
+                                })
+
+                                if (appointments.length === 0) {
+                                    return <div className="dc-empty-state">Sistemde kayıtlı randevu bulunmamaktadır.</div>;
+                                }
+
+                                if (filteredApps.length === 0) {
+                                    return <div style={{ padding: '20px', background: '#fdf2e2', borderRadius: '10px', color: '#c17a1f', border: '1px dashed #e6bd7a' }}>⚠️ Arama kriterlerinize uygun randevu bulunamadı.</div>;
+                                }
+
+                                return (
+                                    <ul style={{ listStyleType: 'none', padding: 0 }}>
+                                        {filteredApps.map(app => (
+                                            <li key={app.id} className="dc-list-item">
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
+                                                    <div>
+                                                        <div style={{ fontSize: '15.5px', marginBottom: '8px' }}>
+                                                            <strong>Hasta:</strong> {app.patient?.name} {app.patient?.surname} <br/>
+                                                            <strong>Doktor:</strong> Dr. {app.doctor?.name} {app.doctor?.surname}
+                                                        </div>
+                                                        <div style={{ fontSize: '14px', marginBottom: '8px', color: '#5b7574' }}>
+                                                            <strong>Tarih:</strong> {new Date(app.appointmentDate).toLocaleString('tr-TR')}
+                                                            {app.duration && <span style={{ marginLeft: '10px' }}>{app.duration} Dk</span>}
+                                                        </div>
+                                                        <div style={{ fontSize: '14px', color: '#3c5352', fontStyle: 'italic', marginBottom: '10px' }}>
+                                                            {app.note && `Not: ${app.note}`}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                                                        <span className="dc-badge" style={{ backgroundColor: app.status === 'APPROVED' ? '#2a9d8f' : (app.status === 'REJECTED' ? '#d1665c' : (app.status === 'RESCHEDULED_BY_CLINIC' ? '#4a90c4' : '#e2a63e')) }}>
+                                                            {app.status === 'APPROVED' ? 'Onaylandı' : (app.status === 'REJECTED' ? 'Reddedildi' : (app.status === 'RESCHEDULED_BY_CLINIC' ? 'Hastadan Onay Bekliyor' : 'Onay Bekliyor'))}
+                                                        </span>
+
+                                                        {app.status === 'PENDING' && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setEditingAppId(app.id);
+                                                                    setEditDuration(app.duration || 30);
+                                                                    setEditNote(app.note || '');
+
+                                                                    const appDateObj = new Date(app.appointmentDate);
+                                                                    const yyyy = appDateObj.getFullYear();
+                                                                    const mm = String(appDateObj.getMonth() + 1).padStart(2, '0');
+                                                                    const dd = String(appDateObj.getDate()).padStart(2, '0');
+                                                                    const hh = String(appDateObj.getHours()).padStart(2, '0');
+                                                                    const min = String(appDateObj.getMinutes()).padStart(2, '0');
+
+                                                                    setEditDate(`${yyyy}-${mm}-${dd}`);
+                                                                    setEditTime(`${hh}:${min}`);
+
+                                                                    setSelectedEventModal(app);
+                                                                }}
+                                                                style={{ padding: '7px 14px', background: '#4a90c4', color: 'white', border: 'none', borderRadius: '7px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}
+                                                            >
+                                                                Düzenle
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+
+                                );
+                            })()}
+                        </div>
+                    )}
+
+                    {/* SEKRETER ONAY MODALI (POP-UP) */}
+                    {selectedEventModal && (activeTab === 'secretary-master-calendar' || activeTab === 'secretary-appointments') && (
+                        <div className="dc-modal-overlay">
+                            <div className="dc-modal-box">
+                                <h3 className="dc-modal-title">⚙️ Randevu Yönetimi</h3>
+
+                                <div className="dc-modal-info">
                                     <div><strong>Doktor:</strong> Dr. {selectedEventModal.doctor?.name} {selectedEventModal.doctor?.surname}</div>
                                     <div><strong>Hasta:</strong> {selectedEventModal.patient?.name} {selectedEventModal.patient?.surname}</div>
                                     <div><strong>Mevcut Tarih:</strong> {new Date(selectedEventModal.appointmentDate).toLocaleString('tr-TR')}</div>
                                     <div style={{ marginTop: '10px' }}>
                                         <strong>Durum: </strong>
-                                        <span style={{ padding: '3px 8px', borderRadius: '8px', color: 'white', backgroundColor: selectedEventModal.status === 'APPROVED' ? '#27ae60' : (selectedEventModal.status === 'REJECTED' ? '#e74c3c' : (selectedEventModal.status === 'RESCHEDULED_BY_CLINIC' ? '#3498db' : '#f39c12')) }}>
+                                        <span className="dc-badge" style={{ backgroundColor: selectedEventModal.status === 'APPROVED' ? '#2a9d8f' : (selectedEventModal.status === 'REJECTED' ? '#d1665c' : (selectedEventModal.status === 'RESCHEDULED_BY_CLINIC' ? '#4a90c4' : '#e2a63e')) }}>
                                             {selectedEventModal.status === 'APPROVED' ? 'Onaylı' : (selectedEventModal.status === 'REJECTED' ? 'İptal' : (selectedEventModal.status === 'RESCHEDULED_BY_CLINIC' ? 'Hastadan Onay Bekliyor' : 'Onay Bekliyor'))}
                                         </span>
                                     </div>
@@ -1183,7 +1510,7 @@ export default function Dashboard({ user }) {
 
                                 {/* tarih - saat  */}
                                 <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Yeni Tarih Seçin:</label>
+                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px', color: '#2c4a49' }}>Yeni Tarih Seçin:</label>
                                     <input
                                         type="date"
                                         min={today}
@@ -1192,12 +1519,12 @@ export default function Dashboard({ user }) {
                                             setEditDate(e.target.value);
                                             setEditTime('');
                                         }}
-                                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', marginBottom: '10px' }}
+                                        style={{ width: '100%', padding: '10px', borderRadius: '9px', border: '1.5px solid #dce8e7', marginBottom: '10px', boxSizing: 'border-box' }}
                                     />
 
                                     {editDate && (
                                         <div style={{ marginTop: '10px' }}>
-                                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Uygun Saatler:</label>
+                                            <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px', color: '#2c4a49' }}>Uygun Saatler:</label>
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', maxHeight: '120px', overflowY: 'auto', padding: '5px 0' }}>
                                                 {timeSlots.map(time => (
                                                     <button
@@ -1205,10 +1532,10 @@ export default function Dashboard({ user }) {
                                                         onClick={() => setEditTime(time)}
                                                         style={{
                                                             padding: '8px 5px',
-                                                            borderRadius: '6px',
-                                                            border: editTime === time ? '2px solid #f39c12' : '1px solid #dce8e7',
-                                                            backgroundColor: editTime === time ? '#fdf2e9' : '#ffffff',
-                                                            color: editTime === time ? '#d35400' : '#2c3e50',
+                                                            borderRadius: '7px',
+                                                            border: editTime === time ? '2px solid #e2a63e' : '1px solid #dce8e7',
+                                                            backgroundColor: editTime === time ? '#fdf2e2' : '#ffffff',
+                                                            color: editTime === time ? '#c17a1f' : '#2c4a49',
                                                             fontWeight: editTime === time ? 'bold' : 'normal',
                                                             cursor: 'pointer',
                                                             fontSize: '13px',
@@ -1225,14 +1552,14 @@ export default function Dashboard({ user }) {
 
                                 <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
                                     <div style={{ flex: 1 }}>
-                                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Süre (Dakika):</label>
-                                        <input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} />
+                                        <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px', color: '#2c4a49' }}>Süre (Dakika):</label>
+                                        <input type="number" value={editDuration} onChange={(e) => setEditDuration(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '9px', border: '1.5px solid #dce8e7', boxSizing: 'border-box' }} />
                                     </div>
                                 </div>
 
                                 <div style={{ marginBottom: '20px' }}>
-                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px' }}>Doktora İletilecek Not:</label>
-                                    <textarea value={editNote} onChange={(e) => setEditNote(e.target.value)} rows="2" style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }} placeholder="Örn: 20lik diş çekimi..."></textarea>
+                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px', color: '#2c4a49' }}>Doktora İletilecek Not:</label>
+                                    <textarea value={editNote} onChange={(e) => setEditNote(e.target.value)} rows="2" style={{ width: '100%', padding: '10px', borderRadius: '9px', border: '1.5px solid #dce8e7', boxSizing: 'border-box', fontFamily: 'inherit' }} placeholder="Örn: 20lik diş çekimi..."></textarea>
                                 </div>
 
                                 {/* erteleme buton */}
@@ -1251,12 +1578,22 @@ export default function Dashboard({ user }) {
                                                 duration: Number(editDuration)
                                             });
 
-                                            setAppointments(appointments.map(a => a.id === selectedEventModal.id ? { ...a, status: 'RESCHEDULED_BY_CLINIC', appointmentDate: newDateTime, note: editNote, duration: Number(editDuration) } : a));
+                                            // State'i anında güncelle
+                                            setAppointments(appointments.map(a =>
+                                                a.id === selectedEventModal.id
+                                                    ? { ...a, status: 'RESCHEDULED_BY_CLINIC', appointmentDate: newDateTime, note: editNote, duration: Number(editDuration) }
+                                                    : a
+                                            ));
+
                                             setSelectedEventModal(null);
                                             alert("Randevu ertelendi, hastadan onay bekleniyor.");
-                                        } catch (error) { alert("Erteleme başarısız!"); }
+                                        } catch (error) {
+                                            alert("Erteleme başarısız!");
+                                        }
+
                                     }}
-                                    style={{ width: '100%', padding: '10px', marginBottom: '10px', background: '#f39c12', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                                    className="dc-modal-primary-btn"
+                                    style={{ background: '#e2a63e' }}
                                 >
                                     Tarihi Değiştir ve Hastaya Onaya Gönder
                                 </button>
@@ -1265,12 +1602,27 @@ export default function Dashboard({ user }) {
                                     <button
                                         onClick={async () => {
                                             try {
-                                                await updateAppointment(selectedEventModal.id, { status: 'APPROVED', note: editNote, duration: Number(editDuration) });
-                                                setAppointments(appointments.map(a => a.id === selectedEventModal.id ? { ...a, status: 'APPROVED', note: editNote, duration: Number(editDuration) } : a));
+                                                await updateAppointment(selectedEventModal.id, {
+                                                    status: 'APPROVED',
+                                                    note: editNote,
+                                                    duration: Number(editDuration)
+                                                });
+
+                                                //  State'i anında güncelle (Optimistic / Local Update)
+                                                setAppointments(appointments.map(a =>
+                                                    a.id === selectedEventModal.id
+                                                        ? { ...a, status: 'APPROVED', note: editNote, duration: Number(editDuration) }
+                                                        : a
+                                                ));
+
+                                                //modalı güvenle kapatma  hafızayı temizle
                                                 setSelectedEventModal(null);
-                                            } catch (error) { alert("Güncelleme başarısız!"); }
+                                            } catch (error) {
+                                                alert("Güncelleme başarısız!");
+                                            }
+
                                         }}
-                                        style={{ flex: 1, padding: '10px', background: '#27ae60', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                                        style={{ flex: 1, padding: '11px', background: '#2a9d8f', color: 'white', border: 'none', borderRadius: '9px', cursor: 'pointer', fontWeight: 'bold' }}
                                     >
                                         Onayla
                                     </button>
@@ -1278,89 +1630,41 @@ export default function Dashboard({ user }) {
                                         onClick={async () => {
                                             try {
                                                 await updateAppointment(selectedEventModal.id, { status: 'REJECTED' });
-                                                setAppointments(appointments.map(a => a.id === selectedEventModal.id ? { ...a, status: 'REJECTED' } : a));
+
+                                                // State'i anında güncelle
+                                                setAppointments(appointments.map(a =>
+                                                    a.id === selectedEventModal.id ? { ...a, status: 'REJECTED' } : a
+                                                ));
+
                                                 setSelectedEventModal(null);
-                                            } catch (error) { alert("İptal başarısız!"); }
+                                            } catch (error) {
+                                                alert("İptal başarısız!");
+                                            }
+
                                         }}
-                                        style={{ flex: 1, padding: '10px', background: '#e74c3c', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                                        style={{ flex: 1, padding: '11px', background: '#d1665c', color: 'white', border: 'none', borderRadius: '9px', cursor: 'pointer', fontWeight: 'bold' }}
                                     >
                                         İptal Et
                                     </button>
                                 </div>
                                 <button
                                     onClick={() => setSelectedEventModal(null)}
-                                    style={{ width: '100%', padding: '10px', marginTop: '10px', background: '#ecf0f1', color: '#7f8c8d', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                                    className="dc-modal-close-btn"
                                 >
                                     Kapat
                                 </button>
                             </div>
                         </div>
                     )}
-                    {/* SHADCN UI TARZI SAĞ ALT BİLDİRİM (TOAST) - Sadece Sekretere Çıkar */}
+
                     {showToast && user.role === 'ROLE_SECRETARY' && (
-                        <div style={{
-                            position: 'fixed',
-                            bottom: '24px',
-                            right: '24px',
-                            backgroundColor: '#ffffff',
-                            border: '1px solid #e2edec',
-                            boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                            padding: '16px 20px',
-                            borderRadius: '8px',
-                            zIndex: 9999,
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: '12px',
-                            maxWidth: '350px',
-                            animation: 'slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
-                        }}>
-                            <style>
-                                {`
-                    @keyframes slideInRight {
-                        from { transform: translateX(100%); opacity: 0; }
-                        to { transform: translateX(0); opacity: 1; }
-                    }
-                    `}
-                            </style>
-                            <div style={{
-                                backgroundColor: '#fef5e7',
-                                color: '#f39c12',
-                                borderRadius: '50%',
-                                width: '28px',
-                                height: '28px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 'bold',
-                                flexShrink: 0,
-                                fontSize: '18px'
-                            }}>
-                                •
-                            </div>
+                        <div className="dc-toast">
+                            <div style={{ backgroundColor: '#fdf2e2', color: '#c17a1f', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', flexShrink: 0, fontSize: '18px' }}>•</div>
                             <div style={{ flex: 1 }}>
-                                <h4 style={{ margin: '0 0 5px 0', color: '#0f172a', fontSize: '14px', fontWeight: '600' }}>
-                                    Onay Bekleyen Randevular
-                                </h4>
-                                <p style={{ margin: 0, color: '#64748b', fontSize: '13px', lineHeight: '1.4' }}>
-                                    Sistemde işlem yapmanızı bekleyen <strong>{pendingCount} adet</strong> yeni randevu talebi bulunuyor.
-                                </p>
+                                <h4 style={{ margin: '0 0 5px 0', color: '#123b3a', fontSize: '14px', fontWeight: '600' }}>Onay Bekleyen Randevular</h4>
+                                <p style={{ margin: 0, color: '#6c8a89', fontSize: '13px', lineHeight: '1.4' }}>Sistemde işlem yapmanızı bekleyen <strong>{pendingCount} adet</strong> yeni randevu talebi bulunuyor.</p>
                             </div>
-                            <button
-                                onClick={() => setShowToast(false)}
-                                style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    color: '#94a3b8',
-                                    cursor: 'pointer',
-                                    padding: '0',
-                                    fontSize: '18px',
-                                    lineHeight: '1',
-                                    display: 'flex',
-                                    alignItems: 'center'
-                                }}
-                            >
-                                &times;
-                            </button>
+                            <button onClick={() => setShowToast(false)} style={{ background: 'transparent', border: 'none', color: '#9db3b2', cursor: 'pointer', padding: '0', fontSize: '18px', lineHeight: '1', display: 'flex', alignItems: 'center' }}>&times;</button>
                         </div>
                     )}
 
