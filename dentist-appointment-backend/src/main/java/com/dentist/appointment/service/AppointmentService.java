@@ -67,6 +67,10 @@ public class AppointmentService {
         if (request.getDuration() != null) {
             appointment.setDuration(request.getDuration());
         }
+        if (request.getAppointmentDate() != null) {
+            // gelen sting tarihli olan LocalDateTime objesine çevirip kaydediyoruz
+            appointment.setAppointmentDate(java.time.LocalDateTime.parse(request.getAppointmentDate()));
+        }
         //datatbase kaydet
         return appointmentRepository.save(appointment);
     }
@@ -74,4 +78,5 @@ public class AppointmentService {
     public void deleteAppointment(String id) {
         appointmentRepository.deleteById(id);
     }
+
 }

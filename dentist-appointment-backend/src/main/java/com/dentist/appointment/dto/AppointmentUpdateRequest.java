@@ -7,4 +7,5 @@ public class AppointmentUpdateRequest {
     private String status;   //  "APPROVED", "REJECTED"
     private String note;     // "Kanal tedavisi, röntgen çekilecek"
     private Integer duration; //  45 (Dakika)
+    private String appointmentDate;
 }
