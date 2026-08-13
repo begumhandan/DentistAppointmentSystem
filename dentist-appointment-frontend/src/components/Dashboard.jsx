@@ -21,6 +21,11 @@ export default function Dashboard({ user }) {
     const [selectedEventModal, setSelectedEventModal] = useState(null);
     const [editDate, setEditDate] = useState('');
     const [editTime, setEditTime] = useState('');
+    const [filterPatient, setFilterPatient] = useState('');
+    const [filterDoctor, setFilterDoctor] = useState('');
+    const [filterDate, setFilterDate] = useState('');
+    const [filterNote, setFilterNote] = useState('');
+    const [bookedSlots, setBookedSlots] = useState([]);
 
 // Bugünden önceki tarihleri seçtirmemek için bugünün tarihini alıyoruz
     const today = new Date().toISOString().split('T')[0];
@@ -70,6 +75,53 @@ export default function Dashboard({ user }) {
             fetchAppointments();
         }
     }, [activeTab, user.id]);
+    // doktor-tarih doluysa göstermeme kısmı
+    useEffect(() => {
+        if (activeTab === 'new-appointment' && selectedDoctor && selectedDay) {
+            const fetchBookedSlots = async () => {
+                try {
+                    const allApps = await getAppointments();
+
+                    const booked = allApps
+                        .filter(app => {
+                            // 1. İptal edilen (REJECTED) randevular saati meşgul etmez
+                            if (app.status === 'REJECTED') return false;
+
+                            // 2. Sadece seçili günün randevularına bak
+                            const d = new Date(app.appointmentDate);
+                            const yyyy = d.getFullYear();
+                            const mm = String(d.getMonth() + 1).padStart(2, '0');
+                            const dd = String(d.getDate()).padStart(2, '0');
+                            const appDateStr = `${yyyy}-${mm}-${dd}`;
+
+                            if (appDateStr !== selectedDay) return false;
+
+                            // Seçilen doktor o saatte doluysa
+                            const isDoctorBusy = String(app.doctor?.id) === String(selectedDoctor);
+
+                            //veya bu kullanıcının (hastanın) o saatte zaten bir randevusu varsa
+                            const isPatientBusy = String(app.patient?.id) === String(user.id);
+
+                            // ikisinden biri bile doğruysa bu saati dolu (booked) listesine atıcak
+                            return isDoctorBusy || isPatientBusy;
+                        })
+                        .map(app => {
+                            const d = new Date(app.appointmentDate);
+                            const hh = String(d.getHours()).padStart(2, '0');
+                            const mm = String(d.getMinutes()).padStart(2, '0');
+                            return `${hh}:${mm}`;
+                        });
+
+                    setBookedSlots(booked);
+                } catch (error) {
+                    console.error("Dolu saatler çekilemedi:", error);
+                }
+            };
+            fetchBookedSlots();
+        } else {
+            setBookedSlots([]); // Doktor veya tarih silinirse dolu saatleri sıfırla
+        }
+    }, [selectedDoctor, selectedDay, activeTab, user.id]);
 
     //randevu kaydetme fonksiyonu
     const handleSaveAppointment = async () => {
@@ -457,24 +509,33 @@ export default function Dashboard({ user }) {
                                     <div className="dc-form-field">
                                         <label>Uygun Saatler</label>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                                            {timeSlots.map(time => (
-                                                <button
-                                                    key={time}
-                                                    onClick={() => setSelectedTime(time)}
-                                                    style={{
-                                                        padding: '10px',
-                                                        borderRadius: '8px',
-                                                        border: selectedTime === time ? '2px solid #27ae60' : '1px solid #dce8e7',
-                                                        backgroundColor: selectedTime === time ? '#e8f8f5' : '#ffffff',
-                                                        color: selectedTime === time ? '#27ae60' : '#2c3e50',
-                                                        fontWeight: selectedTime === time ? 'bold' : 'normal',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                >
-                                                    {time}
-                                                </button>
-                                            ))}
+                                            {timeSlots.map(time => {
+                                                const isBooked = bookedSlots.includes(time); // Saat dolu mu kontrolü
+
+                                                return (
+                                                    <button
+                                                        key={time}
+                                                        disabled={isBooked} // Doluysa butonu tıklanamaz yap
+                                                        onClick={() => setSelectedTime(time)}
+                                                        style={{
+                                                            padding: '10px',
+                                                            borderRadius: '8px',
+                                                            border: selectedTime === time ? '2px solid #27ae60' : '1px solid #dce8e7',
+
+                                                            // Doluysa gri, seçiliyse yeşil, boşsa beyaz:
+                                                            backgroundColor: isBooked ? '#f2f4f4' : (selectedTime === time ? '#e8f8f5' : '#ffffff'),
+                                                            color: isBooked ? '#bdc3c7' : (selectedTime === time ? '#27ae60' : '#2c3e50'),
+
+                                                            fontWeight: selectedTime === time ? 'bold' : 'normal',
+                                                            cursor: isBooked ? 'not-allowed' : 'pointer', // Doluysa imleç yasak işareti olur
+                                                            textDecoration: isBooked ? 'line-through' : 'none', // Doluysa üstünü çiz
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        {time}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}
@@ -892,50 +953,107 @@ export default function Dashboard({ user }) {
                         </>
                     )}
 
-                    {/* 2. LİSTE GÖRÜNÜMÜ */}
+                    {/* liste görünüm */}
                     {activeTab === 'secretary-appointments' && (
                         <div>
                             <button
-                                onClick={() => setActiveTab('menu')}
+                                onClick={() => {
+                                    setActiveTab('menu');
+                                    setFilterPatient(''); // Menüye dönerken aramaları temizlesin
+                                    setFilterDoctor('');
+                                    setFilterDate('');
+                                    setFilterNote('');
+                                }}
                                 style={{ marginBottom: '15px', padding: '8px 15px', cursor: 'pointer', backgroundColor: '#95a5a6', color: 'white', border: 'none', borderRadius: '5px' }}
                             >
                                 &larr; Geri Dön
                             </button>
 
-                            <h3 style={{ color: '#8e44ad', marginBottom: '20px' }}>Klinik Randevu Listesi</h3>
+                            <h3 style={{ color: '#8e44ad', marginBottom: '15px' }}>Klinik Randevu Listesi</h3>
 
-                            {appointments.length === 0 ? (
-                                <div style={{ padding: '20px', background: '#f8f9fa', borderRadius: '5px', color: '#7f8c8d' }}>
-                                    Sistemde kayıtlı randevu bulunmamaktadır.
+                            {/* arama çubuğu */}
+                            <div style={{ background: '#f4f6f6', padding: '15px', borderRadius: '10px', marginBottom: '20px', border: '1px solid #dce8e7', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                                <div style={{ flex: '1', minWidth: '150px' }}>
+                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#2c3e50', marginBottom: '5px' }}>Hasta Adı</label>
+                                    <input type="text" placeholder="Hasta ara..." value={filterPatient} onChange={e => setFilterPatient(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #bdc3c7' }} />
                                 </div>
-                            ) : (
-                                <ul style={{ listStyleType: 'none', padding: 0 }}>
-                                    {appointments.map(app => (
-                                        <li key={app.id} style={{ padding: '15px', border: '1px solid #e0e0e0', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#fdfdfd' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                <div>
-                                                    <div style={{ fontSize: '16px', marginBottom: '8px' }}>
-                                                        <strong>Hasta:</strong> {app.patient?.name} {app.patient?.surname} <br/>
-                                                        <strong>Doktor:</strong> Dr. {app.doctor?.name} {app.doctor?.surname}
+                                <div style={{ flex: '1', minWidth: '150px' }}>
+                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#2c3e50', marginBottom: '5px' }}>Doktor Adı</label>
+                                    <input type="text" placeholder="Doktor ara..." value={filterDoctor} onChange={e => setFilterDoctor(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #bdc3c7' }} />
+                                </div>
+                                <div style={{ flex: '1', minWidth: '150px' }}>
+                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#2c3e50', marginBottom: '5px' }}>Tarih</label>
+                                    <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #bdc3c7' }} />
+                                </div>
+                                <div style={{ flex: '1', minWidth: '150px' }}>
+                                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', color: '#2c3e50', marginBottom: '5px' }}>Açıklama</label>
+                                    <input type="text" placeholder="Açıklama ara..." value={filterNote} onChange={e => setFilterNote(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #bdc3c7' }} />
+                                </div>
+                                <button
+                                    onClick={() => { setFilterPatient(''); setFilterDoctor(''); setFilterDate(''); setFilterNote(''); }}
+                                    style={{ padding: '10px 15px', backgroundColor: '#7f8c8d', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', height: '39px' }}
+                                >
+                                    Temizle
+                                </button>
+                            </div>
+
+                            {/* filterlenmiş randevular */}
+                            {(() => {
+                                //arama kutusuna göre filreleme
+                                const filteredApps = appointments.filter(app => {
+                                    const matchPatient = !filterPatient || `${app.patient?.name} ${app.patient?.surname}`.toLowerCase().includes(filterPatient.toLowerCase());
+                                    const matchDoctor = !filterDoctor || `${app.doctor?.name} ${app.doctor?.surname}`.toLowerCase().includes(filterDoctor.toLowerCase());
+                                    const matchNote = !filterNote || (app.note && app.note.toLowerCase().includes(filterNote.toLowerCase()));
+                                    //tarih formatlama
+                                    const appDateObj = new Date(app.appointmentDate);
+                                    const yyyy = appDateObj.getFullYear();
+                                    const mm = String(appDateObj.getMonth() + 1).padStart(2, '0');
+                                    const dd = String(appDateObj.getDate()).padStart(2, '0');
+                                    const appDateStr = `${yyyy}-${mm}-${dd}`;
+
+                                    const matchDate = !filterDate || appDateStr === filterDate;
+
+
+                                    return matchPatient && matchDoctor && matchDate && matchNote;
+                                });
+
+                                if (appointments.length === 0) {
+                                    return <div style={{ padding: '20px', background: '#f8f9fa', borderRadius: '5px', color: '#7f8c8d' }}>Sistemde kayıtlı randevu bulunmamaktadır.</div>;
+                                }
+
+                                if (filteredApps.length === 0) {
+                                    return <div style={{ padding: '20px', background: '#fdf2e9', borderRadius: '5px', color: '#e67e22', border: '1px dashed #e67e22' }}>⚠️ Arama kriterlerinize uygun randevu bulunamadı.</div>;
+                                }
+
+                                return (
+                                    <ul style={{ listStyleType: 'none', padding: 0 }}>
+                                        {filteredApps.map(app => (
+                                            <li key={app.id} style={{ padding: '15px', border: '1px solid #e0e0e0', borderRadius: '8px', marginBottom: '15px', backgroundColor: '#fdfdfd' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                    <div>
+                                                        <div style={{ fontSize: '16px', marginBottom: '8px' }}>
+                                                            <strong>Hasta:</strong> {app.patient?.name} {app.patient?.surname} <br/>
+                                                            <strong>Doktor:</strong> Dr. {app.doctor?.name} {app.doctor?.surname}
+                                                        </div>
+                                                        <div style={{ fontSize: '14px', marginBottom: '8px', color: '#555' }}>
+                                                            <strong>Tarih:</strong> {new Date(app.appointmentDate).toLocaleString('tr-TR')}
+                                                            {app.duration && <span style={{ marginLeft: '10px' }}>{app.duration} Dk</span>}
+                                                        </div>
+                                                        <div style={{ fontSize: '14px', color: '#2c3e50', fontStyle: 'italic', marginBottom: '10px' }}>
+                                                            {app.note && `Not: ${app.note}`}
+                                                        </div>
                                                     </div>
-                                                    <div style={{ fontSize: '14px', marginBottom: '8px', color: '#555' }}>
-                                                        <strong>Tarih:</strong> {new Date(app.appointmentDate).toLocaleString('tr-TR')}
-                                                        {app.duration && <span style={{ marginLeft: '10px' }}>{app.duration} Dk</span>}
-                                                    </div>
-                                                    <div style={{ fontSize: '14px', color: '#2c3e50', fontStyle: 'italic', marginBottom: '10px' }}>
-                                                        {app.note && `Not: ${app.note}`}
+                                                    <div>
+                                    <span style={{ padding: '6px 10px', borderRadius: '12px', color: 'white', fontSize: '13px', backgroundColor: app.status === 'APPROVED' ? '#27ae60' : (app.status === 'REJECTED' ? '#e74c3c' : (app.status === 'RESCHEDULED_BY_CLINIC' ? '#3498db' : '#f39c12')) }}>
+                                        {app.status === 'APPROVED' ? 'Onaylandı' : (app.status === 'REJECTED' ? 'Reddedildi' : (app.status === 'RESCHEDULED_BY_CLINIC' ? 'Hastadan Onay Bekliyor' : 'Onay Bekliyor'))}
+                                    </span>
                                                     </div>
                                                 </div>
-                                                <div>
-                                        <span style={{ padding: '6px 10px', borderRadius: '12px', color: 'white', fontSize: '13px', backgroundColor: app.status === 'APPROVED' ? '#27ae60' : (app.status === 'REJECTED' ? '#e74c3c' : (app.status === 'RESCHEDULED_BY_CLINIC' ? '#3498db' : '#f39c12')) }}>
-                                            {app.status === 'APPROVED' ? 'Onaylandı' : (app.status === 'REJECTED' ? 'Reddedildi' : (app.status === 'RESCHEDULED_BY_CLINIC' ? 'Hastadan Onay Bekliyor' : 'Onay Bekliyor'))}
-                                        </span>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                );
+                            })()}
                         </div>
                     )}
 
