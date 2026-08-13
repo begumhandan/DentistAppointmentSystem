@@ -33,6 +33,7 @@ export default function Dashboard({ user }) {
     const [bookedSlots, setBookedSlots] = useState([]);
     const [showToast, setShowToast] = useState(false);
     const [pendingCount, setPendingCount] = useState(0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
 // Bugünden önceki tarihleri seçtirmemek için bugünün tarihini alıyoruz
     const today = new Date().toISOString().split('T')[0];
@@ -51,6 +52,9 @@ export default function Dashboard({ user }) {
     const [editNote, setEditNote] = useState('');
 
     useEffect(() => {
+        setSelectedEventModal(null);
+        setEditingAppId(null);
+        setEditingAppId(null);
         if (activeTab === 'new-appointment') {
             const fetchDoctors = async () => {
                 const doctorList = await getDoctors();
@@ -95,6 +99,8 @@ export default function Dashboard({ user }) {
     }, [activeTab, user.id]);
     // doktor-tarih doluysa göstermeme kısmı
     useEffect(() => {
+        setSelectedEventModal(null);
+        setEditingAppId(null);
         if (activeTab === 'new-appointment' && selectedDoctor && selectedDay) {
             const fetchBookedSlots = async () => {
                 try {
@@ -102,10 +108,10 @@ export default function Dashboard({ user }) {
 
                     const booked = allApps
                         .filter(app => {
-                            // 1. İptal edilen (REJECTED) randevular saati meşgul etmez
+                            // iptal edilen (REJECTED) randevular saati meşgul etmez
                             if (app.status === 'REJECTED') return false;
 
-                            // 2. Sadece seçili günün randevularına bak
+                            //sadece seçili günün randevularına bak
                             const d = new Date(app.appointmentDate);
                             const yyyy = d.getFullYear();
                             const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -143,24 +149,50 @@ export default function Dashboard({ user }) {
 
     //randevu kaydetme fonksiyonu
     const handleSaveAppointment = async () => {
+        // 1. Önce boş alan kontrolü yapıyoruz (Hiçbir şey seçmeden butona basılırsa)
         if (!selectedDoctor || !selectedDay || !selectedTime) {
             alert("Lütfen doktor, tarih ve saat seçiminizi tamamlayınız!");
             return;
         }
 
+        // tarih formatını ve geçmiş tarih olup olmadığını kontrol ediyoruz
+        const selectedDateObj = new Date(selectedDay);
+        const todayObj = new Date();
+        todayObj.setHours(0, 0, 0, 0); // Sadece günleri kıyaslamak için saatleri sıfırla
+        selectedDateObj.setHours(0, 0, 0, 0);
+
+        // Eğer tarih geçersizse veya bugünden küçükse durdur
+        if (isNaN(selectedDateObj.getTime()) || selectedDateObj < todayObj) {
+            alert("Lütfen geçerli veya gelecekteki bir tarih giriniz!");
+            return;
+        }
+
+        // Çift tıklama (Spam) koruması
+        if (isSubmitting) {
+            return;
+        }
+
+        // 4. Backend İsteği
         try {
-            // Seçilen gün ve saati backend'in istediği LocalDateTime formatına birleştirdik.
+            setIsSubmitting(true); // Butonu kilitle
+
+            // Seçilen gün ve saati backend'in istediği LocalDateTime formatına birleştiriyoruz.
             const finalDateTime = `${selectedDay}T${selectedTime}:00`;
 
             await createAppointment(user.id, selectedDoctor, finalDateTime);
+
+            // Başarılı kayıt sonrası temizlik ve yönlendirme
             alert("Randevunuz başarıyla oluşturuldu!");
-            setActiveTab('menu');
             setSelectedDoctor('');
             setSelectedDay('');
             setSelectedTime('');
+            setActiveTab('menu');
+
         } catch (error) {
             console.error("Randevu kaydedilemedi:", error);
             alert("Randevu alınırken bir hata oluştu.");
+        } finally {
+            setIsSubmitting(false); // İşlem bitince (başarılı veya başarısız) kilidi aç
         }
     };
     //takvimde randevunun durumuna göre renk faklı olucak
@@ -758,6 +790,55 @@ export default function Dashboard({ user }) {
                     max-width: 350px;
                     animation: dc-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                 }
+/* Takvimin ana çerçevesini hizalar ve ekran dışına taşmasını engeller */
+.calendar-container-centered {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto; /* Tam ortaya oturtur */
+    padding: 0 15px; /* Mobilde kenarlara yapışmasını engeller */
+}
+
+/* React Big Calendar'ın Ajanda görünümündeki tablo hizalamasını düzeltir */
+.rbc-calendar {
+    width: 100%;
+    background: white;
+}
+
+/* Ajanda listesinde uzun notlar varsa yanlara taşmasını engeller ve boşluk ekler */
+.rbc-agenda-view table {
+    table-layout: fixed; /* Sütunları eşit ve sabit tutar */
+    width: 100%;
+    
+    /* YENİ EKLENEN KISIM: Randevular arasına boşluk bırakır */
+    border-collapse: separate !important; 
+    border-spacing: 0 12px !important; /* 0 yatay, 12px dikey boşluk */
+}
+
+/* YENİ EKLENEN KISIM: Her bir randevu satırını bağımsız bir kutu (kart) gibi gösterir */
+.rbc-agenda-view table tbody tr {
+    background-color: #f9fcfb; /* Randevu kutusunun arka plan rengi */
+    box-shadow: 0 2px 4px rgba(20, 90, 90, 0.05); /* Hafif gölge */
+}
+
+.rbc-agenda-view td {
+    white-space: normal; /* Yazı uzunsa alt satıra atar, ekranı bozmaz */
+    word-wrap: break-word;
+    padding: 12px 16px !important; /* İçeriğin nefes alması için iç boşluk */
+    
+    /* İsteğe bağlı: Kutu kenarlarını hafif yumuşatır */
+    border-top: 1px solid #e2edec;
+    border-bottom: 1px solid #e2edec;
+}
+
+/* Kutunun en sol ve en sağ köşelerini yuvarlatır */
+.rbc-agenda-view td:first-child {
+    border-left: 1px solid #e2edec;
+    border-radius: 8px 0 0 8px;
+}
+.rbc-agenda-view td:last-child {
+    border-right: 1px solid #e2edec;
+    border-radius: 0 8px 8px 0;
+}              
                 @keyframes dc-slide-in {
                     from { transform: translateX(30px); opacity: 0; }
                     to { transform: translateX(0); opacity: 1; }
@@ -826,10 +907,7 @@ export default function Dashboard({ user }) {
                                         />
                                     </svg>
                                 </div>
-                                <div>
-                                    <h2 className="dc-welcome-title">Hoş Geldiniz{user?.name ? `, ${user.name}` : ''}</h2>
-                                    <p className="dc-welcome-subtitle">Diş sağlığınızla ilgili işlemlerinizi buradan kolayca yönetebilirsiniz.</p>
-                                </div>
+
                             </div>
 
                             <h3 className="dc-section-title">
@@ -1115,8 +1193,13 @@ export default function Dashboard({ user }) {
                                 <button
                                     className="dc-confirm-btn"
                                     onClick={handleSaveAppointment}
+                                    disabled={isSubmitting}
+                                    style={{
+                                        opacity: isSubmitting ? 0.6 : 1,
+                                        cursor: isSubmitting ? 'not-allowed' : 'pointer'
+                                    }}
                                 >
-                                    Randevuyu Onayla
+                                    {isSubmitting ? 'Oluşturuluyor...' : 'Randevuyu Onayla'}
                                 </button>
                             </div>
                         </div>
@@ -1129,60 +1212,60 @@ export default function Dashboard({ user }) {
                 <div>
                     {/* doktor takvim */}
                     {activeTab === 'doctor-calendar' && (
-                        <div style={{ marginTop: '20px' }}>
-                            <div className="dc-panel-header">
-                                <h3 style={{ color: '#123b3a' }}>Randevu Takvimim</h3>
-                                <button
-                                    onClick={() => {
-                                        setActiveTab('patient-history');
-                                        setSearchTerm('');
-                                        setSelectedPatient(null);
-                                    }}
-                                    className="dc-action-btn"
-                                    style={{ background: 'linear-gradient(135deg, #2a9d8f, #21867a)' }}
-                                >
-                                    Hasta Geçmişi İncele
-                                </button>
-                            </div>
+                        <div className="calendar-container-centered">
+                            <div style={{ marginTop: '20px' }}>
+                                <div className="dc-panel-header">
+                                    <h3 style={{ color: '#123b3a' }}>Randevu Takvimim</h3>
 
-                            <div className="dc-panel" style={{ height: '550px' }}>
-                                <Calendar
-                                    localizer={localizer}
-                                    events={appointments.map(app => ({
-                                        id: app.id,
-                                        title: `${app.patient?.name || 'Bilinmiyor'} ${app.patient?.surname || ''}`,
-                                        start: new Date(app.appointmentDate),
-                                        end: new Date(new Date(app.appointmentDate).getTime() + (app.duration || 30) * 60000),
-                                        tooltipDetails: `Süre: ${app.duration || 30} Dakika`,
-                                        originalData: app
-                                    }))}
-                                    startAccessor="start"
-                                    endAccessor="end"
-                                    tooltipAccessor="tooltipDetails"
-                                    eventPropGetter={(event) => {
-                                        return { style: { backgroundColor: '#bfe0db', border: 'none', borderRadius: '6px', color: '#123b3a', display: 'block', padding: '0', boxShadow: 'none' } };
-                                    }}
-                                    components={{
-                                        event: ({ event }) => (
-                                            <div style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                <div style={{ fontSize: '13px', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                    Hasta : {event.title}
-                                                </div>
-                                                {event.originalData.note && (
-                                                    <div style={{ fontSize: '12px', fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.85 }}>{event.originalData.note}</div>
-                                                )}
-                                            </div>
-                                        )
-                                    }}
-                                    onSelectEvent={(event) => {
-                                        const app = event.originalData;
-                                        setEditingAppId(app.id);
-                                        setEditDuration(app.duration || 30);
-                                        setEditNote(app.note || '');
-                                        setSelectedEventModal(app);
-                                    }}
-                                    messages={{ next: "»", previous: "«", today: "Bugün", month: "Ay", week: "Hafta", day: "Gün", agenda: "Ajanda", noEventsInRange: "Bu aralıkta randevu bulunmamaktadır." }}
-                                />
+                                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+
+                                        <button
+                                            onClick={() => {
+                                                setActiveTab('patient-history');
+                                                setSearchTerm('');
+                                                setSelectedPatient(null);
+                                            }}
+                                            className="dc-action-btn"
+                                            style={{ background: 'linear-gradient(135deg, #2a9d8f, #21867a)' }}
+                                        >
+                                            Hasta Geçmişi İncele
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="dc-panel" style={{ height: '600px' }}>
+                                    <Calendar
+                                        localizer={localizer}
+                                        events={appointments.map(app => ({
+                                            id: app.id,
+                                            // Başlıkta sadece hastanın adı görünecek
+                                            title: `Hasta: ${app.patient?.name || 'Bilinmiyor'} ${app.patient?.surname || ''}${app.note ? ` | Not: ${app.note}` : ''}`,
+                                            start: new Date(app.appointmentDate),
+                                            end: new Date(new Date(app.appointmentDate).getTime() + (app.duration || 30) * 60000),
+                                            originalData: app
+                                        }))}
+                                        startAccessor="start"
+                                        endAccessor="end"
+                                        // Sekreterdeki şık renk/stil fonksiyonunu buraya da bağladık
+                                        eventPropGetter={eventStyleGetter}
+                                        onSelectEvent={(event) => {
+                                            const app = event.originalData;
+                                            setEditingAppId(app.id);
+                                            setEditDuration(app.duration || 30);
+                                            setEditNote(app.note || '');
+                                        }}
+                                        messages={{
+                                            next: "»",
+                                            previous: "«",
+                                            today: "Bugün",
+                                            month: "Ay",
+                                            week: "Hafta",
+                                            day: "Gün",
+                                            agenda: "Ajanda",
+                                            noEventsInRange: "Bu aralıkta randevu bulunmamaktadır."
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}
@@ -1308,6 +1391,7 @@ export default function Dashboard({ user }) {
                 <div>
                     {/*klinik takvim (ANA EKRAN) */}
                     {activeTab === 'secretary-master-calendar' && (
+                        <div className="calendar-container-centered">
                         <div style={{ marginTop: '20px' }}>
                             <div className="dc-panel-header">
                                 <h3 style={{ color: '#123b3a' }}>Genel Klinik Takvimi</h3>
@@ -1352,6 +1436,7 @@ export default function Dashboard({ user }) {
                                     messages={{ next: "»", previous: "«", today: "Bugün", month: "Ay", week: "Hafta", day: "Gün" }}
                                 />
                             </div>
+                        </div>
                         </div>
                     )}
 
@@ -1497,7 +1582,7 @@ export default function Dashboard({ user }) {
                     {selectedEventModal && (activeTab === 'secretary-master-calendar' || activeTab === 'secretary-appointments') && (
                         <div className="dc-modal-overlay">
                             <div className="dc-modal-box">
-                                <h3 className="dc-modal-title">⚙️ Randevu Yönetimi</h3>
+                                <h3 className="dc-modal-title">Randevu Yönetimi</h3>
 
                                 <div className="dc-modal-info">
                                     <div><strong>Doktor:</strong> Dr. {selectedEventModal.doctor?.name} {selectedEventModal.doctor?.surname}</div>
@@ -1516,6 +1601,7 @@ export default function Dashboard({ user }) {
                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px', color: '#2c4a49' }}>Yeni Tarih Seçin:</label>
                                     <input
                                         type="date"
+                                        min={today}
                                         value={editDate}
                                         onChange={(e) => {
                                             setEditDate(e.target.value); //yeni tarihi kaydet
@@ -1568,10 +1654,24 @@ export default function Dashboard({ user }) {
                                 {/* erteleme buton */}
                                 <button
                                     onClick={async () => {
+                                        // 1. Boş alan kontrolü
                                         if (!editDate || !editTime) {
                                             alert("Lütfen yeni bir tarih ve saat seçin!");
                                             return;
                                         }
+
+                                        // 2. Elle girilen geçmiş tarih kontrolü
+                                        const selectedDateObj = new Date(editDate);
+                                        const todayObj = new Date();
+                                        todayObj.setHours(0, 0, 0, 0); // Saatleri sıfırla, sadece günü kıyasla
+                                        selectedDateObj.setHours(0, 0, 0, 0);
+
+                                        if (isNaN(selectedDateObj.getTime()) || selectedDateObj < todayObj) {
+                                            alert("Lütfen geçerli veya gelecekteki bir tarih giriniz!");
+                                            return;
+                                        }
+
+                                        // 3. Backend'e kaydetme işlemi
                                         try {
                                             const newDateTime = `${editDate}T${editTime}:00`;
                                             await updateAppointment(selectedEventModal.id, {

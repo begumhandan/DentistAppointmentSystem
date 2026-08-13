@@ -53,12 +53,14 @@ function App() {
                                             </svg>
                                         </div>
                                         <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, letterSpacing: '-0.2px' }}>
-                                            DentSmile Randevu Sistemi
+                                            DentSmielRandevu Sistemi
                                         </h2>
                                     </div>
 
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-
+        <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)' }}>
+            Hoş geldin, <strong style={{ color: 'white' }}>{currentUser.name}</strong>
+        </span>
                                         <button
                                             onClick={handleLogout}
                                             style={{
