@@ -1036,7 +1036,10 @@ export default function Dashboard({ user }) {
                                         className="dc-select"
                                         min={today}
                                         value={selectedDay}
-                                        onChange={(e) => setSelectedDay(e.target.value)}
+                                        onChange={(e) => {
+                                            setSelectedDay(e.target.value); // Yeni tarihi kaydet
+                                            setSelectedTime(''); // Günü değiştirdiği an, seçili saati temizlesin
+                                        }}
                                     />
                                 </div>
 
@@ -1513,12 +1516,12 @@ export default function Dashboard({ user }) {
                                     <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', marginBottom: '5px', color: '#2c4a49' }}>Yeni Tarih Seçin:</label>
                                     <input
                                         type="date"
-                                        min={today}
                                         value={editDate}
                                         onChange={(e) => {
-                                            setEditDate(e.target.value);
-                                            setEditTime('');
+                                            setEditDate(e.target.value); //yeni tarihi kaydet
+                                            setEditTime(''); // tarih değiştiği an eski saati sıfırlasın
                                         }}
+
                                         style={{ width: '100%', padding: '10px', borderRadius: '9px', border: '1.5px solid #dce8e7', marginBottom: '10px', boxSizing: 'border-box' }}
                                     />
 
