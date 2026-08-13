@@ -26,6 +26,8 @@ export default function Dashboard({ user }) {
     const [filterDate, setFilterDate] = useState('');
     const [filterNote, setFilterNote] = useState('');
     const [bookedSlots, setBookedSlots] = useState([]);
+    const [showToast, setShowToast] = useState(false);
+    const [pendingCount, setPendingCount] = useState(0);
 
 // Bugünden önceki tarihleri seçtirmemek için bugünün tarihini alıyoruz
     const today = new Date().toISOString().split('T')[0];
@@ -62,10 +64,21 @@ export default function Dashboard({ user }) {
                         setAppointments(allAppointments.filter(app =>
                             app.doctor && app.doctor.id === user.id && app.status === 'APPROVED'
                         ));
-                    }
-                    else if (user.role === 'ROLE_SECRETARY') {
-                        //sekreter herkesin rndevusunu görür.
+                    } else if (user.role === 'ROLE_SECRETARY') {
+                        // sekreter herkesin randevusunu görür.
                         setAppointments(allAppointments);
+
+                        // onay bekleyenleri (PENDING) say ve bildirimi aç
+                        const pendingApps = allAppointments.filter(app => app.status === 'PENDING' || app.status === 'RESCHEDULED_BY_CLINIC');
+                        if (pendingApps.length > 0) {
+                            setPendingCount(pendingApps.length);
+                            setShowToast(true); // Bildirimi göster
+
+                            //10 sn
+                            setTimeout(() => {
+                                setShowToast(false);
+                            }, 10000);
+                        }
                     }
                 } catch (error) {
                     console.error("Randevular çekilemedi:", error);
@@ -171,7 +184,9 @@ export default function Dashboard({ user }) {
     };
 
     return (
+
         <div className="dc-dashboard">
+
             <style>{`
                 .dc-dashboard {
                     padding: 28px;
@@ -619,12 +634,57 @@ export default function Dashboard({ user }) {
                                         title: `${app.patient?.name || 'Bilinmiyor'} ${app.patient?.surname || ''}`,
                                         start: new Date(app.appointmentDate),
                                         end: new Date(new Date(app.appointmentDate).getTime() + (app.duration || 30) * 60000),
-                                        tooltipDetails: `Tedavi Notu: ${app.note || 'Girilmemiş'}\nSüre: ${app.duration || 30} Dakika`,
+                                        tooltipDetails: `Süre: ${app.duration || 30} Dakika`,
                                         originalData: app
                                     }))}
                                     startAccessor="start"
                                     endAccessor="end"
                                     tooltipAccessor="tooltipDetails"
+
+                                    eventPropGetter={(event) => {
+                                        return {
+                                            style: {
+                                                backgroundColor: '#b3d4e6',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                color: '#1a3644',
+                                                display: 'block',
+                                                padding: '0',
+                                                boxShadow: 'none'
+                                            }
+                                        };
+                                    }}
+
+                                    // sadece hasta adı ve note
+                                    components={{
+                                        event: ({ event }) => (
+                                            <div style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <div style={{
+                                                    fontSize: '13px',
+                                                    fontWeight: 'bold',
+                                                    whiteSpace: 'nowrap',
+                                                    overflow: 'hidden',
+                                                    textOverflow: 'ellipsis'
+                                                }}>
+                                                    {event.title}
+                                                </div>
+
+                                                {/* Sadece not varsa ekranda görünür */}
+                                                {event.originalData.note && (
+                                                    <div style={{
+                                                        fontSize: '12px',
+                                                        fontStyle: 'italic',
+                                                        whiteSpace: 'nowrap',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        opacity: 0.85
+                                                    }}>
+                                                        {event.originalData.note}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )
+                                    }}
 
                                     onSelectEvent={(event) => {
                                         const app = event.originalData;
@@ -632,9 +692,8 @@ export default function Dashboard({ user }) {
                                         setEditDuration(app.duration || 30);
                                         setEditNote(app.note || '');
 
-                                        //var olan randevu tarihini ve saatini parçalayıp state'e atıyoruz
+                                        // var olan randevu tarihini ve saatini parçalayıp state'e atıyoruz
                                         const appDateObj = new Date(app.appointmentDate);
-                                        //türkiye saati farkını önlemek için manuel formatlama yaptık
                                         const yyyy = appDateObj.getFullYear();
                                         const mm = String(appDateObj.getMonth() + 1).padStart(2, '0');
                                         const dd = String(appDateObj.getDate()).padStart(2, '0');
@@ -1235,6 +1294,73 @@ export default function Dashboard({ user }) {
                                     Kapat
                                 </button>
                             </div>
+                        </div>
+                    )}
+                    {/* SHADCN UI TARZI SAĞ ALT BİLDİRİM (TOAST) - Sadece Sekretere Çıkar */}
+                    {showToast && user.role === 'ROLE_SECRETARY' && (
+                        <div style={{
+                            position: 'fixed',
+                            bottom: '24px',
+                            right: '24px',
+                            backgroundColor: '#ffffff',
+                            border: '1px solid #e2edec',
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
+                            padding: '16px 20px',
+                            borderRadius: '8px',
+                            zIndex: 9999,
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '12px',
+                            maxWidth: '350px',
+                            animation: 'slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                        }}>
+                            <style>
+                                {`
+                    @keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    `}
+                            </style>
+                            <div style={{
+                                backgroundColor: '#fef5e7',
+                                color: '#f39c12',
+                                borderRadius: '50%',
+                                width: '28px',
+                                height: '28px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 'bold',
+                                flexShrink: 0,
+                                fontSize: '18px'
+                            }}>
+                                •
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <h4 style={{ margin: '0 0 5px 0', color: '#0f172a', fontSize: '14px', fontWeight: '600' }}>
+                                    Onay Bekleyen Randevular
+                                </h4>
+                                <p style={{ margin: 0, color: '#64748b', fontSize: '13px', lineHeight: '1.4' }}>
+                                    Sistemde işlem yapmanızı bekleyen <strong>{pendingCount} adet</strong> yeni randevu talebi bulunuyor.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowToast(false)}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: '#94a3b8',
+                                    cursor: 'pointer',
+                                    padding: '0',
+                                    fontSize: '18px',
+                                    lineHeight: '1',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                }}
+                            >
+                                &times;
+                            </button>
                         </div>
                     )}
 
