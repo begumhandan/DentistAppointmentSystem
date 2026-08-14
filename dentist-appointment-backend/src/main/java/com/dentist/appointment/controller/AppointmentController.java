@@ -7,6 +7,9 @@ import org.springframework.http.ResponseEntity;
 import com.dentist.appointment.dto.AppointmentUpdateRequest;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.List;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -27,14 +30,19 @@ public class AppointmentController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity updateAppointment(
+    public ResponseEntity<?> updateAppointment(
             @PathVariable String id,
             @RequestBody AppointmentUpdateRequest request) {
 
         try {
             Appointment updatedAppointment = appointmentService.updateAppointment(id, request);
             return ResponseEntity.ok(updatedAppointment);
+
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+
         } catch (Exception e) {
+            // diğer hatalar 400 badrequest
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

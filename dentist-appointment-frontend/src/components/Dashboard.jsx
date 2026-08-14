@@ -266,9 +266,7 @@ return (
 
         <div className="dc-dashboard">
 
-            
-
-                        {user.role === 'ROLE_PATIENT' && <PatientDashboard {...dashboardProps} />}
+            {user.role === 'ROLE_PATIENT' && <PatientDashboard {...dashboardProps} />}
             {user.role === 'ROLE_DOCTOR' && <DoctorDashboard {...dashboardProps} />}
             {user.role === 'ROLE_SECRETARY' && <SecretaryDashboard {...dashboardProps} />}
         </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar } from 'react-big-calendar';
+import Swal from 'sweetalert2';
 
 export default function SecretaryDashboard(props) {
     const {
@@ -301,24 +302,21 @@ export default function SecretaryDashboard(props) {
                                 {/* erteleme buton */}
                                 <button
                                     onClick={async () => {
-                                        // 1. Boş alan kontrolü
                                         if (!editDate || !editTime) {
-                                            alert("Lütfen yeni bir tarih ve saat seçin!");
+                                            Swal.fire({ icon: 'warning', title: 'Eksik Bilgi', text: 'Lütfen yeni bir tarih ve saat seçin!' });
                                             return;
                                         }
 
-                                        // 2. Elle girilen geçmiş tarih kontrolü
                                         const selectedDateObj = new Date(editDate);
                                         const todayObj = new Date();
-                                        todayObj.setHours(0, 0, 0, 0); // Saatleri sıfırla, sadece günü kıyasla
+                                        todayObj.setHours(0, 0, 0, 0);
                                         selectedDateObj.setHours(0, 0, 0, 0);
 
                                         if (isNaN(selectedDateObj.getTime()) || selectedDateObj < todayObj) {
-                                            alert("Lütfen geçerli veya gelecekteki bir tarih giriniz!");
+                                            Swal.fire({ icon: 'error', title: 'Geçersiz Tarih', text: 'Lütfen geçerli veya gelecekteki bir tarih giriniz!' });
                                             return;
                                         }
 
-                                        // 3. Backend'e kaydetme işlemi
                                         try {
                                             const newDateTime = `${editDate}T${editTime}:00`;
                                             await updateAppointment(selectedEventModal.id, {
@@ -328,7 +326,6 @@ export default function SecretaryDashboard(props) {
                                                 duration: Number(editDuration)
                                             });
 
-                                            // State'i anında güncelle
                                             setAppointments(appointments.map(a =>
                                                 a.id === selectedEventModal.id
                                                     ? { ...a, status: 'RESCHEDULED_BY_CLINIC', appointmentDate: newDateTime, note: editNote, duration: Number(editDuration) }
@@ -336,11 +333,22 @@ export default function SecretaryDashboard(props) {
                                             ));
 
                                             setSelectedEventModal(null);
-                                            alert("Randevu ertelendi, hastadan onay bekleniyor.");
-                                        } catch (error) {
-                                            alert("Erteleme başarısız!");
-                                        }
+                                            Swal.fire({ icon: 'success', title: 'Ertelendi!', text: 'Hastaya onay bildirimi gönderildi.', timer: 2000, showConfirmButton: false });
 
+                                        } catch (error) {
+                                            if (error.response && (error.response.status === 409 || error.response.status === 400)) {
+                                                const errorMessage = error.response.data || "Seçtiğiniz tarih ve saat başka bir randevu ile çakışıyor.";
+                                                Swal.fire({
+                                                    icon: 'error',
+                                                    title: 'Saat Dolu!',
+                                                    html: `<p style="color: #d33;"><i>${errorMessage}</i></p>`,
+                                                    confirmButtonText: 'Tamam',
+                                                    confirmButtonColor: '#d33'
+                                                });
+                                            } else {
+                                                Swal.fire({ icon: 'error', title: 'Hata', text: 'Erteleme başarısız!' });
+                                            }
+                                        }
                                     }}
                                     className="dc-modal-primary-btn"
                                     style={{ background: '#e2a63e' }}
@@ -358,19 +366,46 @@ export default function SecretaryDashboard(props) {
                                                     duration: Number(editDuration)
                                                 });
 
-                                                //  State'i anında güncelle (Optimistic / Local Update)
+                                                // State'i anında güncelle
                                                 setAppointments(appointments.map(a =>
                                                     a.id === selectedEventModal.id
                                                         ? { ...a, status: 'APPROVED', note: editNote, duration: Number(editDuration) }
                                                         : a
                                                 ));
 
-                                                //modalı güvenle kapatma  hafızayı temizle
                                                 setSelectedEventModal(null);
-                                            } catch (error) {
-                                                alert("Güncelleme başarısız!");
-                                            }
 
+                                                // Başarılı olursa güzel bir yeşil pop-up
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Onaylandı!',
+                                                    text: 'Randevu başarıyla kaydedildi.',
+                                                    timer: 1500,
+                                                    showConfirmButton: false
+                                                });
+
+                                            } catch (error) {
+                                                // BURASI ÇAKIŞMA YAKALAMA (SWEETALERT) BÖLÜMÜ
+                                                if (error.response && (error.response.status === 409 || error.response.status === 400)) {
+                                                    const errorMessage = error.response.data || "Bu işlem başka bir hastanın randevusu ile çakışmaktadır.";
+                                                    Swal.fire({
+                                                        icon: 'error',
+                                                        title: 'Çakışma Tespit Edildi!',
+                                                        html: `
+                                                            <div style="text-align: left; margin-top: 10px;">
+                                                                <p><b>${selectedEventModal.patient?.name} ${selectedEventModal.patient?.surname}</b> adlı hastanın süresi veya saati güncellenemiyor.</p>
+                                                                <p style="color: #d33;"><i>Sebep: ${errorMessage}</i></p>
+                                                                <p>Lütfen önce diğer hastanın saatini kaydırın veya daha kısa bir süre seçin.</p>
+                                                            </div>
+                                                        `,
+                                                        confirmButtonText: 'Tamam, Anladım',
+                                                        confirmButtonColor: '#d33',
+                                                        allowOutsideClick: false
+                                                    });
+                                                } else {
+                                                    Swal.fire({ icon: 'warning', title: 'Hata', text: 'Sunucu ile iletişim kurulamadı.' });
+                                                }
+                                            }
                                         }}
                                         style={{ flex: 1, padding: '11px', background: '#2a9d8f', color: 'white', border: 'none', borderRadius: '9px', cursor: 'pointer', fontWeight: 'bold' }}
                                     >

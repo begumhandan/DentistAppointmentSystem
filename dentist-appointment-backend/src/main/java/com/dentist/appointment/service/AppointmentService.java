@@ -50,30 +50,72 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
-    //randevu güncellenme
+
     public Appointment updateAppointment(String id, AppointmentUpdateRequest request) {
         //databaseden randevuyu bul
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Güncellenecek randevu bulunamadı!"));
-        //yeni statusu güncelle
+
+        // Yeni başlangıç saatini belirle (İstekte tarih varsa onu parse et, yoksa eskisini kullan)
+        LocalDateTime newStartTime = request.getAppointmentDate() != null
+                ? LocalDateTime.parse(request.getAppointmentDate())
+                : appointment.getAppointmentDate();
+
+        // Yeni süreyi belirle (İstekte süre varsa onu al, yoksa eskisini kullan, o da yoksa 30 dk varsay)
+        int newDuration = request.getDuration() != null
+                ? request.getDuration()
+                : (appointment.getDuration() != null ? appointment.getDuration() : 30);
+
+        // Bitiş saatini hesapla
+        LocalDateTime newEndTime = newStartTime.plusMinutes(newDuration);
+
+        // Status onaylı mı kontrol et (Sadece APPROVED olanlar takvimde yer kaplar ve çakışır)
+        String statusToCheck = request.getStatus() != null ? request.getStatus() : appointment.getStatus();
+
+        if ("APPROVED".equals(statusToCheck)) {
+            // Doktorun diğer onaylı randevularını getirsin
+            List<Appointment> doctorsAppointments = appointmentRepository.findByDoctorIdAndStatus(appointment.getDoctor().getId(), "APPROVED");
+
+            for (Appointment app : doctorsAppointments) {
+                // Randevu kendisiyle çakışma testine girmesin diye atlıyoruz
+                if (app.getId().equals(appointment.getId())) {
+                    continue;
+                }
+
+                LocalDateTime otherStart = app.getAppointmentDate();
+                int otherDuration = app.getDuration() != null ? app.getDuration() : 30;
+                LocalDateTime otherEnd = otherStart.plusMinutes(otherDuration);
+
+                // kesişme var mı (zaman )
+                if (newStartTime.isBefore(otherEnd) && newEndTime.isAfter(otherStart)) {
+                    //çakışma varsa hata at.
+                    throw new IllegalStateException("Bu saat aralığında " + app.getPatient().getName() + " adlı hastanın (" + otherStart.toLocalTime() + ") randevusu bulunmaktadır.");
+                }
+            }
+        }
+
+        // yeni statusu güncelle
         if (request.getStatus() != null) {
             appointment.setStatus(request.getStatus());
         }
-        //notu güncelle
+        // notu güncelle
         if (request.getNote() != null) {
             appointment.setNote(request.getNote());
         }
-        //dakika güncelle
+        // dakika güncelle
         if (request.getDuration() != null) {
             appointment.setDuration(request.getDuration());
         }
+        // tarihi güncelle
         if (request.getAppointmentDate() != null) {
-            // gelen sting tarihli olan LocalDateTime objesine çevirip kaydediyoruz
-            appointment.setAppointmentDate(java.time.LocalDateTime.parse(request.getAppointmentDate()));
+            // gelen string tarihli olan LocalDateTime objesine çevirip kaydettik
+            appointment.setAppointmentDate(LocalDateTime.parse(request.getAppointmentDate()));
         }
-        //datatbase kaydet
+
+        // database kaydet
         return appointmentRepository.save(appointment);
     }
+
     //randevu silme
     public void deleteAppointment(String id) {
         appointmentRepository.deleteById(id);
