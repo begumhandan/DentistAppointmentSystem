@@ -63,23 +63,18 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173",
-                "http://192.168.60.250:5173"
-        ));
+
+        // allowCredentials(true) varken allowedOrigins("*") kullanılamaz.
+        // Bu yüzden en güvenli yöntem olan "allowedOriginPatterns" kullanıyoruz:
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-
         configuration.setAllowedHeaders(Arrays.asList("*"));
-
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
-
     }
 }
