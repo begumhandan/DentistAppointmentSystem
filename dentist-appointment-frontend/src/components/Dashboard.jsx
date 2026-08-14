@@ -56,6 +56,14 @@ export default function Dashboard({ user }) {
     const [editNote, setEditNote] = useState('');
 
     useEffect(() => {
+        fetchAppointments(); // Kendi fonksiyonunun adı neyse onu yaz (loadAppointments vb.)
+
+        const interval = setInterval(() => {
+            fetchAppointments();
+        }, 10000); // 10000 milisaniye = 10 saniye (Süreyi istediğin gibi artırıp azaltabilirsin)
+
+        // Yoksa arka planda sonsuza kadar çalışıp tarayıcıyı dondurur.
+        return () => clearInterval(interval);
         setSelectedEventModal(null);
         setEditingAppId(null);
         setEditingAppId(null);
