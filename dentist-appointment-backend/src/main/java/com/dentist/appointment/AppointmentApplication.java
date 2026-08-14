@@ -7,6 +7,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class AppointmentApplication {
 
 	public static void main(String[] args) {
+
+		// Herhangi bir main metodunda veya küçük bir test sınıfında
+		System.out.println(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder().encode("123456"));
 		SpringApplication.run(AppointmentApplication.class, args);
 	}
 

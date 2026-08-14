@@ -42,7 +42,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
 
-        // BURAYA TRY-CATCH EKLEDİK! Hata çıkarsa artık çökmeyecek, konsola yazdıracak.
         try {
             username = jwtService.extractUsername(jwt);
 
