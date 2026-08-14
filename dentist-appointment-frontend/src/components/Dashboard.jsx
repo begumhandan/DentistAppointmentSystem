@@ -100,7 +100,7 @@ export default function Dashboard({ user }) {
 
             const interval = setInterval(() => {
                 fetchAppointmentsData();
-            }, 10000);
+            }, 2000);
 
             return () => clearInterval(interval);
         }
