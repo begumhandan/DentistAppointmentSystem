@@ -56,49 +56,39 @@ export default function Dashboard({ user }) {
     const [editNote, setEditNote] = useState('');
 
     useEffect(() => {
-        fetchAppointments(); // Kendi fonksiyonunun adı neyse onu yaz (loadAppointments vb.)
-
-        const interval = setInterval(() => {
-            fetchAppointments();
-        }, 10000); // 10000 milisaniye = 10 saniye (Süreyi istediğin gibi artırıp azaltabilirsin)
-
-        // Yoksa arka planda sonsuza kadar çalışıp tarayıcıyı dondurur.
-        return () => clearInterval(interval);
         setSelectedEventModal(null);
         setEditingAppId(null);
-        setEditingAppId(null);
+
         if (activeTab === 'new-appointment') {
             const fetchDoctors = async () => {
                 const doctorList = await getDoctors();
                 setDoctors(doctorList);
             };
             fetchDoctors();
-        } else if (activeTab === 'my-appointments' || activeTab === 'doctor-calendar'|| activeTab === 'secretary-appointments' || activeTab === 'secretary-master-calendar') {
-            const fetchAppointments = async () => {
+            return; // İşimiz bitti, çık.
+        }
+
+        if (activeTab === 'my-appointments' || activeTab === 'doctor-calendar'|| activeTab === 'secretary-appointments' || activeTab === 'secretary-master-calendar') {
+
+            // Fonksiyonu en üstte tanımlıyoruz
+            const fetchAppointmentsData = async () => {
                 try {
                     const allAppointments = await getAppointments();
 
-                    // randevuları giriş yapan kullanıcıya göre filtrele
+                    // Rol tabanlı filtreleme
                     if (user.role === 'ROLE_PATIENT') {
                         setAppointments(allAppointments.filter(app => app.patient && app.patient.id === user.id));
                     } else if (user.role === 'ROLE_DOCTOR') {
-                        setAppointments(allAppointments.filter(app =>
-                            app.doctor && app.doctor.id === user.id && app.status === 'APPROVED'
-                        ));
+                        setAppointments(allAppointments.filter(app => app.doctor && app.doctor.id === user.id && app.status === 'APPROVED'));
                     } else if (user.role === 'ROLE_SECRETARY') {
-                        // sekreter herkesin randevusunu görür.
                         setAppointments(allAppointments);
 
-                        // onay bekleyenleri (PENDING) say ve bildirimi aç
+                        // Sekreter için onay bekleyenleri say ve uyarı göster
                         const pendingApps = allAppointments.filter(app => app.status === 'PENDING' || app.status === 'RESCHEDULED_BY_CLINIC');
                         if (pendingApps.length > 0) {
                             setPendingCount(pendingApps.length);
-                            setShowToast(true); // Bildirimi göster
-
-                            //10 sn
-                            setTimeout(() => {
-                                setShowToast(false);
-                            }, 10000);
+                            setShowToast(true);
+                            setTimeout(() => setShowToast(false), 10000);
                         }
                     }
                 } catch (error) {
@@ -106,7 +96,13 @@ export default function Dashboard({ user }) {
                 }
             };
 
-            fetchAppointments();
+            fetchAppointmentsData();
+
+            const interval = setInterval(() => {
+                fetchAppointmentsData();
+            }, 10000);
+
+            return () => clearInterval(interval);
         }
     }, [activeTab, user.id]);
     // doktor-tarih doluysa göstermeme kısmı
