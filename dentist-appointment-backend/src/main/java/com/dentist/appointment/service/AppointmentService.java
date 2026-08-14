@@ -74,7 +74,11 @@ public class AppointmentService {
 
         if ("APPROVED".equals(statusToCheck) || "RESCHEDULED_BY_CLINIC".equals(statusToCheck)) {
             // Doktorun diğer onaylı randevularını getirsin
-            List<Appointment> doctorsAppointments = appointmentRepository.findByDoctorIdAndStatus(appointment.getDoctor().getId(), "APPROVED");
+            // Hem ONAYLI hem de ONAY BEKLEYEN statüleri bir listeye koyuyoruz
+            List<String> blockingStatuses = java.util.Arrays.asList("APPROVED", "RESCHEDULED_BY_CLINIC");
+
+// Veritabanına "Bu iki statüden herhangi biri varsa bana getir" diyoruz
+            List<Appointment> doctorsAppointments = appointmentRepository.findByDoctorIdAndStatusIn(appointment.getDoctor().getId(), blockingStatuses);
 
             for (Appointment app : doctorsAppointments) {
                 // Randevu kendisiyle çakışma testine girmesin diye atlıyoruz
