@@ -81,7 +81,14 @@ export default function SecretaryDashboard(props) {
                                         setEditNote(app.note || '');
                                         setSelectedEventModal(app);
                                     }}
-                                    messages={{ next: "»", previous: "«", today: "Bugün", month: "Ay", week: "Hafta", day: "Gün" }}
+                                    messages={{
+                                        next: "»",
+                                        previous: "«",
+                                        today: "Bugün",
+                                        month: "Ay",
+                                        week: "Hafta",
+                                        day: "Gün" ,
+                                        Agenda: "Ajanda"}}
                                 />
                             </div>
                         </div>

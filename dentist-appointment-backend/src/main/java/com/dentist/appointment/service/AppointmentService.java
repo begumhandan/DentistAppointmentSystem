@@ -72,7 +72,7 @@ public class AppointmentService {
         // Status onaylı mı kontrol et (Sadece APPROVED olanlar takvimde yer kaplar ve çakışır)
         String statusToCheck = request.getStatus() != null ? request.getStatus() : appointment.getStatus();
 
-        if ("APPROVED".equals(statusToCheck)) {
+        if ("APPROVED".equals(statusToCheck) || "RESCHEDULED_BY_CLINIC".equals(statusToCheck)) {
             // Doktorun diğer onaylı randevularını getirsin
             List<Appointment> doctorsAppointments = appointmentRepository.findByDoctorIdAndStatus(appointment.getDoctor().getId(), "APPROVED");
 
